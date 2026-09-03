@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "386774343668",
+    "project_id": "bienestau-23c90",
+    "storage_bucket": "bienestau-23c90.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:386774343668:android:9e5db804eb41969972e3a1",
+        "android_client_info": {
+          "package_name": "com.sanpezlo.newbienestau"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNYHbS5AB2pSjyXA5vXZVpu3c7Zq-GNmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
