@@ -1,9 +1,11 @@
 import React from "react";
-import { View, StyleSheet, Pressable, Image } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
+import { Image } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
 import { Colors } from "@/constants/bienestar/colors";
 import { buildMediaUrl } from "@/lib/bienestar/api";
 import { Media } from "@/types/bienestar/primitives";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export interface NewsFeedItemProps {
   title: string;
@@ -11,6 +13,9 @@ export interface NewsFeedItemProps {
   image?: Media;
   tag?: string;
   onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isManager?: boolean;
   isLast?: boolean;
 }
 
@@ -23,8 +28,8 @@ export function NewsFeedItem({
   isLast = false,
 }: NewsFeedItemProps) {
   return (
-    <Pressable onPress={onPress} style={styles.container}>
-      <View style={styles.content}>
+    <View style={styles.container}>
+      <Pressable onPress={onPress} style={styles.content}>
         <View style={styles.textSide}>
           {tag && (
             <Text
@@ -46,21 +51,22 @@ export function NewsFeedItem({
         </View>
         <Image
           source={{ uri: buildMediaUrl(image?.url) }}
-          style={styles.thumbnail}
-          resizeMode="cover"
+          style={[styles.thumbnail, { backgroundColor: '#F8FAFC' }]}
+          contentFit="contain"
+          transition={200}
         />
-      </View>
+      </Pressable>
       {!isLast && <View style={styles.separator} />}
-    </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
     backgroundColor: "#FFFFFF",
   },
   content: {
+    paddingHorizontal: 20,
     paddingVertical: 16,
     flexDirection: "row",
     gap: 12,
@@ -88,5 +94,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.accent,
     width: "100%",
+    marginLeft: 20,
   },
 });

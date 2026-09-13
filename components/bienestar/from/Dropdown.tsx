@@ -36,6 +36,13 @@ export function Dropdown<T>({ color = "accent", ...props }: DropdownProps<T>) {
         color: Colors.accent,
         fontSize: 14,
       }}
+      itemTextStyle={{
+        color: Colors.text,
+        fontSize: 14,
+      }}
+      containerStyle={{
+        borderRadius: 8,
+      }}
     />
   );
 }

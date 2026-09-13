@@ -1,5 +1,5 @@
-import { ActivityIndicator, Image, Pressable, View, StyleSheet } from "react-native";
-//import { Image } from "react-native-svg";
+import { ActivityIndicator, Pressable, View, StyleSheet, Image } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { Link } from "expo-router";
 
 import { Text } from "@/components/bienestar/primitives/Text";
@@ -10,7 +10,7 @@ import { Colors } from "@/constants/bienestar/colors";
 import { useWelfare } from "@/hooks/bienestar/useWelfare";
 import { buildMediaUrl } from "@/lib/bienestar/api";
 import { ActionLineCard } from "@/components/bienestar/sections/ActionLineCard";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function Welfare() {
   const { welfare, actionLines, isPending, refetch, error } = useWelfare();
@@ -35,62 +35,106 @@ export default function Welfare() {
         </View>
       ) : (
         <View style={styles.container}>
-          {welfare ? (
-            <DynamicSections content={welfare.content} />
-          ) : (
-            <View style={styles.errorContainer}>
-              <Text>La información general de bienestar no está disponible (revisa Strapi).</Text>
+          {/* 1. SECCIÓN VICERRECTORÍA (GRANDE ARRIBA) */}
+          <View style={styles.vicerrectoraSection}>
+            <View style={styles.headerRow}>
+              <View style={styles.line} />
+              <Text color="primary" style={styles.sectionTitle}>
+                VICERRECTORÍA
+              </Text>
             </View>
-          )}
 
-          {/* Líneas de Acción en Cuadrícula Simétrica */}
-          <View style={styles.section}>
-            <Text color="primary" type="subtitle" style={styles.sectionTitle}>
-              Líneas de Acción
-            </Text>
-            <View style={styles.grid}>
-              {(actionLines ?? []).map((item, index) => {
-                const isLast = index === actionLines!.length - 1;
-                const isOdd = actionLines!.length % 2 !== 0;
+            <View style={styles.vicerrectoraCard}>
+              <View style={styles.vicerrectoraHeader}>
+                <View style={styles.vicerrectoraAvatar}>
+                  <ExpoImage
+                    source={require("@/assets/images/Perfil.png")}
+                    style={{ width: 80, height: 80 }}
+                    tintColor={Colors.primary}
+                    contentFit="contain"
+                  />
+                </View>
+                <View style={styles.vicerrectoraInfo}>
+                  <Text type="defaultBold" color="primary" style={styles.vicerrectoraName}>
+                    María del Pilar Agreda Guerrero
+                  </Text>
+                  <Text color="gray" style={styles.vicerrectoraRole}>
+                    Vicerrectora para la Evangelización de las Culturas
+                  </Text>
+                </View>
+              </View>
 
-                return (
-                  <View
-                    key={index}
-                    style={[
-                      styles.gridItem,
-                      isLast && isOdd ? { width: "100%", alignItems: "center" } : {}
-                    ]}
-                  >
-                    <Link
-                      href={{
-                        pathname: "/(protected)/bienestar/welfare/action-line",
-                        params: {
-                          actionLineJson: JSON.stringify(item, null, 2),
-                        },
-                      }}
-                      asChild
-                    >
-                      <ActionLineCard
-                        item={item}
-                        style={isLast && isOdd ? { width: '48%', marginBottom: 30 } : {}}
-                      />
-                    </Link>
-                  </View>
-                );
-              })}
+              <View style={styles.vicerrectoraDivider} />
+
+              <View style={styles.vicerrectoraBody}>
+                <Text color="primary" style={styles.vicerrectoraQuestion}>
+                  ¿Por qué una Vicerrectoría para la Evangelización de las Culturas?
+                </Text>
+                <Text style={styles.vicerrectoraDescription}>
+                  Todas las personas tenemos la capacidad de transformar el mundo a través de la fraternidad y el amor inspirados por los principios Franciscanos y Capuchinos.
+                </Text>
+              </View>
             </View>
           </View>
 
-          {/* Sección de Perfil del Director Premium */}
+          {/* 2. LÍNEAS DE ACCIÓN (CUADRÍCULA 2x2 ABAJO) */}
+          <View style={styles.section}>
+            <View style={styles.headerRow}>
+              <View style={styles.line} />
+              <Text color="primary" style={styles.sectionTitle}>
+                LÍNEAS DE ACCIÓN
+              </Text>
+            </View>
+
+            <View style={styles.grid}>
+              {actionLines && actionLines.length > 0 ? (
+                actionLines.map((item, index) => (
+                    <View key={item.documentId || item.id} style={styles.gridItem}>
+                    <Link
+                        href={{
+                        pathname: "/(protected)/bienestar/welfare/action-line",
+                        params: {
+                            actionLineJson: JSON.stringify(item, null, 2),
+                        },
+                        }}
+                        asChild
+                    >
+                        <ActionLineCard item={item} />
+                    </Link>
+                    </View>
+                ))
+              ) : (
+                // Placeholder para cuando no hay datos
+                [1,2,3,4].map((i) => (
+                    <View key={i} style={[styles.gridItem, { opacity: 0.1 }]}>
+                        <View style={[styles.gridItemContent, { height: 100, backgroundColor: '#CCC', borderRadius: 20 }]} />
+                    </View>
+                ))
+              )}
+            </View>
+          </View>
+
+          {/* 3. SECCIÓN DINÁMICA */}
+          {welfare && <DynamicSections content={welfare.content} />}
+
+          {/* 4. PERFIL DEL DIRECTOR / CONTACTO */}
           {welfare?.director && (
             <View style={styles.profileSection}>
-               <Text color="primary" type="subtitle" style={styles.sectionTitle}>
-                Contacto y Ubicación
-              </Text>
+               <View style={styles.headerRow}>
+                <View style={styles.line} />
+                <Text color="primary" style={styles.sectionTitle}>
+                  CONTACTO Y UBICACIÓN
+                </Text>
+              </View>
               <View style={styles.profileCard}>
                 <View style={styles.profileHeader}>
                   <View style={styles.avatarContainer}>
-                    <Ionicons name="person-circle" size={90} color={Colors.primary} />
+                    <ExpoImage
+                      source={require("@/assets/images/Perfil.png")}
+                      style={{ width: 80, height: 80 }}
+                      tintColor={Colors.primary}
+                      contentFit="contain"
+                    />
                   </View>
                   <View style={styles.profileInfo}>
                     <Text type="defaultBold" color="primary" style={styles.directorName}>
@@ -99,7 +143,7 @@ export default function Welfare() {
                     <Text color="gray" style={styles.directorRole}>
                       {welfare.director.role}
                     </Text>
-                    <View style={styles.badge}>
+                    <View style={[styles.badge, { backgroundColor: Colors.primary }]}>
                       <Text style={styles.badgeText}>DIRECTOR(A)</Text>
                     </View>
                   </View>
@@ -114,6 +158,53 @@ export default function Welfare() {
               </View>
             </View>
           )}
+
+          {/* 5. CONTACTO ESPECÍFICO VICERRECTORÍA */}
+          <View style={styles.vicerrectoriaContactSection}>
+             <View style={styles.headerRow}>
+                <View style={styles.line} />
+                <Text color="primary" style={styles.sectionTitle}>
+                  ¿DESEAS CONTACTARNOS?
+                </Text>
+              </View>
+
+              <View style={styles.contactCard}>
+                <View style={styles.contactItem}>
+                    <View style={styles.contactIconCircle}>
+                        <Image
+                          source={require("@/assets/images/Maps.png")}
+                          style={{ width: 20, height: 20, tintColor: Colors.primary }}
+                          resizeMode="contain"
+                        />
+                    </View>
+                    <Text style={styles.contactText}>Campus Centro, Hall del Edificio San Francisco</Text>
+                </View>
+
+                <View style={styles.contactItem}>
+                    <View style={styles.contactIconCircle}>
+                        <Image
+                          source={require("@/assets/images/Telefono.png")}
+                          style={{ width: 20, height: 20, tintColor: Colors.primary }}
+                          resizeMode="contain"
+                        />
+                    </View>
+                    <Text style={styles.contactText}>(602) 7244434 Ext. 1231 - 1318</Text>
+                </View>
+
+                <View style={styles.contactItem}>
+                    <View style={styles.contactIconCircle}>
+                        <Image
+                          source={require("@/assets/images/biñetas.png")}
+                          style={{ width: 20, height: 20, tintColor: Colors.primary }}
+                          resizeMode="contain"
+                        />
+                    </View>
+                    <Text style={[styles.contactText, { color: Colors.secondary, fontWeight: '700' }]}>
+                        vicebien@unicesmag.edu.co
+                    </Text>
+                </View>
+              </View>
+          </View>
         </View>
       )}
     </ScrollViewLayout>
@@ -133,20 +224,89 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   section: {
-    paddingHorizontal: 16,
-    marginTop: 24,
+    marginTop: 32,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    gap: 12,
+    marginBottom: 20,
+  },
+  line: {
+    width: 4,
+    height: 24,
+    backgroundColor: Colors.secondary,
+    borderRadius: 2,
   },
   sectionTitle: {
-    marginBottom: 20,
-    fontSize: 22,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    paddingHorizontal: 12,
   },
   gridItem: {
-    width: "48%",
+    width: "50%",
+    paddingHorizontal: 8,
+  },
+  gridItemContent: {
+    width: '100%',
+  },
+  vicerrectoraSection: {
+    marginTop: 24,
+  },
+  vicerrectoraCard: {
+    backgroundColor: "transparent",
+    marginHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  vicerrectoraHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  vicerrectoraAvatar: {
+    marginRight: 16,
+  },
+  vicerrectoraInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  vicerrectoraName: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  vicerrectoraRole: {
+    fontSize: 13,
+    marginBottom: 6,
+  },
+  vicerrectoraDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 20,
+    opacity: 0.6,
+  },
+  vicerrectoraBody: {
+    paddingTop: 4,
+  },
+  vicerrectoraQuestion: {
+    fontSize: 22, // Mucho más grande y llamativo
+    fontWeight: '900',
+    marginBottom: 14,
+    lineHeight: 28,
+    color: Colors.primary,
+  },
+  vicerrectoraDescription: {
+    fontSize: 18, // Aumentado para máxima legibilidad
+    lineHeight: 30,
+    color: '#334155', // Gris un poco más oscuro y profesional
+    textAlign: 'justify',
   },
   profileSection: {
     paddingHorizontal: 16,
@@ -202,5 +362,41 @@ const styles = StyleSheet.create({
   },
   contactInfo: {
     marginTop: 8,
+  },
+  vicerrectoriaContactSection: {
+    marginTop: 32,
+    paddingBottom: 60, // Espacio extra al final para el botón central
+  },
+  contactCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    marginHorizontal: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "#F1F5F9",
+    gap: 16,
+  },
+  contactItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  contactIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contactText: {
+    fontSize: 14,
+    color: '#475569',
+    flex: 1,
   }
 });

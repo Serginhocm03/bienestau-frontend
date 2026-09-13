@@ -33,6 +33,8 @@ export type Reminder = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
+  contentId?: string;
+  contentType?: 'news' | 'event';
 };
 
 export type Person = {
@@ -44,6 +46,8 @@ export type Person = {
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
+  contentId?: string;
+  contentType?: 'news' | 'event';
 };
 
 export type User = {

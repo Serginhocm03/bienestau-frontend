@@ -52,10 +52,12 @@ export function buildMediaUrl(url: string | undefined | null) {
 /**
  * Builds the URL for the API endpoint.
  * @param key - The resource key for the API endpoint.
- * @returns The URL for the API endpoint with deep populate.
+ * @param populate - Whether to add the deep populate parameter (default: true).
+ * @returns The URL for the API endpoint.
  */
-export function buildUrl(key: string) {
-  // pLevel is a query parameter that deep populates the response.
-  // more info: https://github.com/NEDDL/strapi-v5-plugin-populate-deep
-  return `${env.API}/${key}?pLevel`;
+export function buildUrl(key: string, populate: boolean = true) {
+  const baseUrl = `${env.API}/${key}`;
+  // pLevel es para carga profunda de componentes dinámicos.
+  // Para listas simples, Strapi v5 necesita al menos ?populate=* para ver imágenes.
+  return populate ? `${baseUrl}?pLevel` : baseUrl;
 }

@@ -27,7 +27,7 @@ export default function ProtectedLayout() {
           }}
         />
         <Drawer.Screen
-          name="carnet"
+          name="carnet/index"
           options={{
             drawerLabel: "Carnet",
             title: "Carnet",

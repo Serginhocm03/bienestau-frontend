@@ -39,13 +39,21 @@ export const useHome = () => {
     EventCollection[]
   >({
     queryKey: ["events"],
-    queryFn: getApi<EventsResponse>(),
+    queryFn: getApi<EventsResponse>({
+      params: {
+        sort: "createdAt:desc",
+      },
+    }),
     select: (data) => data.data,
   });
 
   const news = useQuery<NewsResponse, AxiosError<ErrorResponse>, New[]>({
     queryKey: ["news"],
-    queryFn: getApi<NewsResponse>(),
+    queryFn: getApi<NewsResponse>({
+      params: {
+        sort: "createdAt:desc",
+      },
+    }),
     select: (data) => data.data,
   });
 

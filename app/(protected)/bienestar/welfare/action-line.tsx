@@ -1,4 +1,5 @@
-import { View, Image } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScrollViewLayout } from "@/components/bienestar/layout/ScrollViewLayout";
@@ -9,6 +10,7 @@ import { ContactSection } from "@/components/bienestar/sections/ContactSection";
 import { DynamicSections } from "@/components/bienestar/sections/DynamicSections";
 import { ActionLine as IActionLine } from "@/types/bienestar/collections";
 import { buildMediaUrl } from "@/lib/bienestar/api";
+import { Colors } from "@/constants/bienestar/colors";
 
 export default function ActionLine() {
   const router = useRouter();
@@ -16,9 +18,20 @@ export default function ActionLine() {
     actionLineJson: string;
   }>();
 
-  const actionLine: IActionLine = params.actionLineJson
-    ? JSON.parse(params.actionLineJson)
-    : ({} as IActionLine);
+  let actionLine: IActionLine | null = null;
+  try {
+    actionLine = params.actionLineJson ? JSON.parse(params.actionLineJson) : null;
+  } catch (e) {
+    console.error("Error parsing actionLineJson", e);
+  }
+
+  if (!actionLine) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Error al cargar la línea de acción</Text>
+      </View>
+    );
+  }
 
   const programs = actionLine?.programs ?? [];
 
@@ -30,14 +43,12 @@ export default function ActionLine() {
       onBack={() => router.back()}
     >
       <View style={{ paddingTop: 0 }}>
-        {/* Ficha técnica estilo Wikipedia perfeccionada */}
         <View style={{
           padding: 16,
           backgroundColor: '#FFFFFF',
           borderBottomWidth: 1,
           borderBottomColor: '#F1F5F9'
         }}>
-          {/* Título integrado en el cuerpo blanco */}
           <Text color="primary" type="subtitle" style={{ marginBottom: 12, fontSize: 24 }}>
             {actionLine?.header?.title}
           </Text>
@@ -62,7 +73,8 @@ export default function ActionLine() {
                 <Image
                   source={{ uri: buildMediaUrl(actionLine.header.image.url) }}
                   style={{ width: '100%', height: 140, borderRadius: 2 }}
-                  resizeMode="cover"
+                  contentFit="cover"
+                  transition={200}
                 />
                 <Text style={{ fontSize: 9, marginTop: 4, color: '#666', textAlign: 'center', fontWeight: 'bold' }}>
                   Ficha informativa
@@ -128,7 +140,7 @@ export default function ActionLine() {
         style={{ margin: 16, marginTop: 8 }}
         BeforeComponent={() => (
           <View>
-            {(actionLine.directors ?? []).map((director, index) => (
+            {(actionLine?.directors ?? []).map((director, index) => (
               <View key={index}>
                 <Text>{director.name}</Text>
                 <Text color="primary" style={{ fontSize: 12 }}>

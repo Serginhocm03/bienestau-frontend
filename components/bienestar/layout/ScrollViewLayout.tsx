@@ -4,6 +4,7 @@ import {
   ScrollView,
   ScrollViewProps,
   View,
+  Image,
 } from "react-native";
 import Animated, {
   Extrapolation,
@@ -18,7 +19,7 @@ import { buildMediaUrl } from "@/lib/bienestar/api";
 import { AnimatedText } from "@/components/bienestar/primitives/Text";
 import { Header } from "@/components/bienestar/layout/Header";
 import { Header as IHeader, Layout } from "@/types/bienestar/components";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export interface ScrollViewLayoutProps extends ScrollViewProps {
   header: IHeader;
@@ -26,6 +27,7 @@ export interface ScrollViewLayoutProps extends ScrollViewProps {
   stickyImage?: boolean;
   onRefresh?: () => void;
   onBack?: () => void;
+  floatingAction?: React.ReactNode;
 }
 
 export function ScrollViewLayout({
@@ -35,6 +37,7 @@ export function ScrollViewLayout({
   children,
   onRefresh,
   onBack,
+  floatingAction,
   ...props
 }: ScrollViewLayoutProps) {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -159,7 +162,11 @@ export function ScrollViewLayout({
                 borderRadius: 20,
               }}
             >
-              <Ionicons name="arrow-back" size={28} color={layout.height === 0 ? Colors.primary : "white"} />
+              <Image
+                source={require("@/assets/images/regresar.png")}
+                style={{ width: 28, height: 28, tintColor: layout.height === 0 ? Colors.primary : "white" }}
+                resizeMode="contain"
+              />
             </Pressable>
           )}
 
@@ -188,6 +195,8 @@ export function ScrollViewLayout({
           </View>
         </Animated.View>
       )}
+
+      {floatingAction}
     </View>
   );
 }

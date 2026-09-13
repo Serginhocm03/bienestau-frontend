@@ -1,32 +1,49 @@
 import { Tabs, useSegments } from "expo-router";
-import React from "react";
-import { Platform, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, Image, View } from "react-native";
 import { Colors } from "@/constants/bienestar/colors";
+import { Text } from "@/components/bienestar/primitives/Text";
+import * as Notifications from 'expo-notifications';
 
 /**
- * TabLayout - Configuración de la barra de navegación inferior (Bottom Tabs)
- * Se ha reconstruido desde cero para asegurar la visibilidad de los iconos y el cumplimiento de colores.
+ * TabLayout con Imágenes Personalizadas e Indicador de Avisos
  */
 export default function TabLayout() {
   const segments = useSegments();
-
-  // Ocultar la barra si estamos en pantallas de detalle profundo
   const hideTabBar = segments.includes("action-line");
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    // Escuchar notificaciones entrantes para aumentar el contador
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      if (notification.request.content.data?.type === 'reminder') {
+        setUnreadCount(prev => prev + 1);
+      }
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  // Si el usuario entra a la pestaña de avisos, reseteamos el contador
+  const isAtReminders = segments.includes("reminders");
+  useEffect(() => {
+    if (isAtReminders) {
+      setUnreadCount(0);
+    }
+  }, [isAtReminders]);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        // Configuración de colores (OBLIGATORIO NEGRO para iconos y texto)
-        tabBarActiveTintColor: "#000000",
-        tabBarInactiveTintColor: "#000000",
+        tabBarActiveTintColor: Colors.secondary,
+        tabBarInactiveTintColor: "#94A3B8",
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
-          marginBottom: Platform.OS === "ios" ? 0 : 5,
+          fontSize: 11,
+          fontWeight: "bold",
+          marginBottom: 5,
         },
         tabBarStyle: hideTabBar ? { display: "none" } : styles.tabBar,
       }}
@@ -35,11 +52,11 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Inicio",
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={focused ? "home" : "home-outline"}
-              size={24}
-              color="#000000"
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require("@/assets/images/Home.png")}
+              style={[styles.icon, { tintColor: color }]}
+              resizeMode="contain"
             />
           ),
         }}
@@ -48,11 +65,11 @@ export default function TabLayout() {
         name="welfare"
         options={{
           title: "Bienestar",
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={focused ? "heart" : "heart-outline"}
-              size={24}
-              color="#000000"
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require("@/assets/images/Bienestar.png")}
+              style={[styles.icon, { tintColor: color }]}
+              resizeMode="contain"
             />
           ),
         }}
@@ -60,13 +77,20 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reminders"
         options={{
-          title: "Recordatorios",
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={focused ? "notifications" : "notifications-outline"}
-              size={24}
-              color="#000000"
-            />
+          title: "Avisos",
+          tabBarIcon: ({ color }) => (
+            <View>
+              <Image
+                source={require("@/assets/images/Recordatorios.png")}
+                style={[styles.icon, { tintColor: color }]}
+                resizeMode="contain"
+              />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount}</Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />
@@ -74,15 +98,16 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Perfil",
-          tabBarIcon: ({ focused }) => (
-            <Ionicons
-              name={focused ? "person" : "person-outline"}
-              size={24}
-              color="#000000"
+          tabBarIcon: ({ color }) => (
+            <Image
+              source={require("@/assets/images/Perfil.png")}
+              style={[styles.icon, { tintColor: color }]}
+              resizeMode="contain"
             />
           ),
         }}
       />
+      <Tabs.Screen name="create" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -93,13 +118,29 @@ const styles = StyleSheet.create({
     height: 65,
     borderTopWidth: 1,
     borderTopColor: "#E2E8F0",
-    paddingTop: 10,
-    paddingBottom: Platform.OS === "ios" ? 20 : 10,
-    // Sombras para darle un toque premium
     elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingTop: 5,
   },
+  icon: {
+    width: 26,
+    height: 26,
+  },
+  badge: {
+    position: 'absolute',
+    right: -6,
+    top: -3,
+    backgroundColor: '#EF4444', // Rojo intenso
+    borderRadius: 9,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'white',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  }
 });

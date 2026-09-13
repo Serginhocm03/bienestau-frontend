@@ -4,8 +4,6 @@ buildscript {
   repositories {
     google()
     mavenCentral()
-    maven { url "https://plugins.gradle.org/m2/" }
-    maven { url "https://releases.jfrog.io/artifactory/oss-releases/" }
   }
   dependencies {
         classpath 'com.google.gms:google-services:4.4.1'
@@ -33,7 +31,6 @@ allprojects {
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }
-    maven { url "https://plugins.gradle.org/m2/" }
   }
 }
 

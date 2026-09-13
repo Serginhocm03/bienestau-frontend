@@ -7,12 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#F2F5F7"
@@ -20,10 +20,10 @@
       "package": "com.sanpezlo.newbienestau",
       "googleServicesFile": "./google-services.json",
       "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_NETWORK_STATE",
-        "android.permission.ACCESS_WIFI_STATE"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK"
       ]
     },
     "web": {
@@ -67,11 +67,21 @@
           }
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La aplicación necesita acceso a tus fotos para subir imágenes de eventos y noticias.",
+          "cameraPermission": "La aplicación necesita acceso a la cámara para tomar fotos de eventos y noticias."
+        }
+      ]
     ],
     "notification": {
       "icon": "./assets/images/icon.png",
-      "color": "#0066CC"
+      "color": "#004A8B",
+      "androidMode": "collapse",
+      "androidFocusedDisplayLine": "one"
     },
     "experiments": {
       "typedRoutes": true
@@ -79,9 +89,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "6481d463-856d-49e5-be1f-3f88d1b9be2e"
+        "projectId": "5b4b721c-4073-42de-badc-90d50e2bfc33"
       }
     },
-    "owner": "serginho_3cm"
+    "owner": "sergiocabrera3"
   }
 }

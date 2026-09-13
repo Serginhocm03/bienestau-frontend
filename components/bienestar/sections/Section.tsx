@@ -50,12 +50,16 @@ function Top(sectionProps: SectionProps & { width: number }) {
       }}
     >
       {sectionProps.title && (
-        <Text color="primary" type="subtitle">
+        <Text color="primary" type="subtitle" style={{ fontSize: 22 }}>
           {sectionProps.title}
         </Text>
       )}
 
-      {sectionProps.description && <Text>{sectionProps.description}</Text>}
+      {sectionProps.description && (
+        <Text style={{ fontSize: 18, lineHeight: 28, textAlign: 'justify' }}>
+            {sectionProps.description}
+        </Text>
+      )}
 
       {sectionProps.image && (
         <ImageAutoScale
@@ -174,11 +178,11 @@ function Left(sectionProps: SectionProps & { width: number }) {
       style={{
         paddingVertical: sectionProps.paddingVertical,
         paddingHorizontal: sectionProps.paddingHorizontal,
-        gap: 8,
+        gap: 12,
       }}
     >
       {sectionProps.title && (
-        <Text color="primary" type="subtitle" style={{ marginBottom: 8 }}>
+        <Text color="primary" type="subtitle" style={{ marginBottom: 8, fontSize: 22 }}>
           {sectionProps.title}
         </Text>
       )}
@@ -190,7 +194,9 @@ function Left(sectionProps: SectionProps & { width: number }) {
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text color="black" style={{ lineHeight: 20 }}>{sectionProps.description}</Text>
+          <Text color="black" style={{ fontSize: 18, lineHeight: 28, textAlign: 'justify' }}>
+            {sectionProps.description}
+          </Text>
         </View>
         {sectionProps.image && (
           <View style={{

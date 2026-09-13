@@ -25,10 +25,11 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
+      name: 'Alertas BienestAU',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#0066CC',
+      lightColor: '#004A8B',
+      showBadge: true,
     });
   }
 
@@ -69,14 +70,22 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
 
 export async function registerTokenWithBackend(token: string): Promise<void> {
   try {
-    await axios.post(buildUrl('notification-tokens'), {
+    const url = buildUrl('notification-tokens', false);
+
+    console.log('🔄 Registrando/Actualizando token en el servidor...');
+
+    // Ahora el backend maneja toda la lógica de "Upsert" (crear o actualizar)
+    // Simplemente enviamos el token y la plataforma.
+    await axios.post(url, {
       data: {
         token,
         platform: Platform.OS,
+        active: true
       },
     });
-    console.log('✅ Token registrado en backend');
+
+    console.log('✅ Dispositivo registrado correctamente como ACTIVO');
   } catch (error) {
-    console.error('❌ Error registrando token:', error);
+    console.error('❌ Error enviando token al backend:', error);
   }
 }

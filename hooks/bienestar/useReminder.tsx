@@ -28,40 +28,27 @@ export const useReminder = () => {
       },
     }),
     select: (data) => {
-  const allReminders = data.data;
-  
-  console.log('🔍 FILTRO REMINDERS - Total:', allReminders.length);
-  console.log('🔍 Usuario actual:', user);
-  console.log('🔍 Tipo de usuario:', user?.type);
-  
-  if (!user) {
-    console.log('⚠️ No hay usuario, mostrando todos');
-    return allReminders;
-  }
+      const allReminders = data.data;
 
-  const filtered = allReminders.filter((reminder) => {
-    console.log(`  📝 Recordatorio "${reminder.title}" - to: ${reminder.to}`);
-    
-    if (reminder.to === "all") {
-      console.log('    ✅ Mostrar (to=all)');
-      return true;
-    }
-    if (reminder.to === "students" && user.type === "student") {
-      console.log('    ✅ Mostrar (to=students y user=student)');
-      return true;
-    }
-    if (reminder.to === "managers" && user.type === "manager") {
-      console.log('    ✅ Mostrar (to=managers y user=manager)');
-      return true;
-    }
-    
-    console.log('    ❌ Ocultar');
-    return false;
-  });
+      if (!user) return allReminders;
 
-  console.log('🎯 Recordatorios filtrados:', filtered.length);
-  return filtered;
-},
+      const filtered = allReminders.filter((reminder) => {
+        if (reminder.to === "all") return true;
+        if (reminder.to === "students" && user.type === "student") return true;
+        if (reminder.to === "managers" && user.type === "manager") return true;
+        return false;
+      });
+
+      // ORDENAR: Primero los que tienen fecha (más cercana a hoy primero), luego los que no tienen fecha.
+      return filtered.sort((a, b) => {
+        if (a.fecha_evento && b.fecha_evento) {
+          return new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime();
+        }
+        if (a.fecha_evento) return -1;
+        if (b.fecha_evento) return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+    },
     enabled: !!user,
   });
 

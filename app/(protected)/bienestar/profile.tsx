@@ -1,11 +1,11 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
 import { Button } from "@/components/bienestar/from/Button";
 import { useAuth } from "@/context/auth/AuthContext";
 import { Colors } from "@/constants/bienestar/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function Profile() {
   const { setAuth, user } = useAuth();
@@ -26,7 +26,12 @@ export default function Profile() {
     >
       <View style={styles.header}>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person-circle" size={100} color={Colors.primary} />
+          <ExpoImage
+            source={require("@/assets/images/Perfil.png")}
+            style={{ width: 100, height: 100 }}
+            tintColor={Colors.primary}
+            contentFit="contain"
+          />
         </View>
         <Text type="subtitle" color="primary" style={styles.userName}>
           {user?.name || "Usuario"}
