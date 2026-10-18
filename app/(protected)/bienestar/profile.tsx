@@ -1,22 +1,36 @@
 import React from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { View, StyleSheet, ScrollView, Platform } from "react-native";
 import { Image as ExpoImage } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
 import { Button } from "@/components/bienestar/from/Button";
 import { useAuth } from "@/context/auth/AuthContext";
 import { Colors } from "@/constants/bienestar/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import { env } from "@/lib/bienestar/env";
 
 export default function Profile() {
   const { setAuth, user } = useAuth();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (Platform.OS === "android" || Platform.OS === "ios") {
+        await SecureStore.deleteItemAsync(env.TOKEN_KEY);
+      }
+    } catch (e) {
+      console.log("Error al borrar token:", e);
+    }
+
     setAuth({
       authenticated: false,
       token: null,
       user: null,
     });
+
+    router.replace("/(auth)");
   };
 
   return (

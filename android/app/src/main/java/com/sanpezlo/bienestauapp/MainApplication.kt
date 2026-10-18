@@ -1,4 +1,4 @@
-package com.sanpezlo.newbienestau
+package com.sanpezlo.bienestauapp
 import com.facebook.react.common.assets.ReactFontManager
 
 import android.app.Application

@@ -21,6 +21,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { buildUrl } from "@/lib/bienestar/api";
+import { scheduleAllUpcomingEventReminders } from "@/lib/bienestar/notifications";
 
 export default function Home() {
   const router = useRouter();
@@ -34,6 +35,13 @@ export default function Home() {
 
   // Verificar si el usuario es docente/administrador
   const isManager = user?.type?.toLowerCase() === "manager";
+
+  // Programar automáticamente los recordatorios de 12h antes para todos los eventos futuros
+  React.useEffect(() => {
+    if (events && events.length > 0) {
+      scheduleAllUpcomingEventReminders(events);
+    }
+  }, [events]);
 
   const handlePress = (item: any) => {
     if (!item) return;
@@ -57,7 +65,14 @@ export default function Home() {
     }
   };
 
-  const handleEdit = (item: any, type: 'news' | 'event') => {
+  const getItemType = (item: any): 'news' | 'event' => {
+    if (!item) return 'news';
+    if (item.fecha_evento || item.contentType === 'event' || item.type === 'event') return 'event';
+    return 'news';
+  };
+
+  const handleEdit = (item: any, explicitType?: 'news' | 'event') => {
+    const type = explicitType || getItemType(item);
     router.push({
       pathname: "/(protected)/bienestar/create",
       params: {
@@ -65,13 +80,14 @@ export default function Home() {
         type: type,
         initialTitle: item.title,
         initialDescription: item.description,
-        initialDate: item.date,
+        initialDate: item.date || item.fecha_evento,
         initialImageUrl: item.image?.url || null
       }
     });
   };
 
-  const handleDelete = (item: any, type: 'news' | 'event') => {
+  const handleDelete = (item: any, explicitType?: 'news' | 'event') => {
+    const type = explicitType || getItemType(item);
     Alert.alert(
       "Confirmar Eliminación",
       `¿Estás seguro de que deseas eliminar esta ${type === 'news' ? 'noticia' : 'evento'}?`,
@@ -152,8 +168,8 @@ export default function Home() {
           {filteredReminder && (
             <View style={styles.featuredReminder}>
               <View style={styles.featuredLabel}>
-                <MaterialCommunityIcons name="sparkles" size={16} color="white" />
-                <Text style={styles.featuredLabelText}>LO MÁS RECIENTE</Text>
+                <MaterialCommunityIcons name="bell-ring" size={14} color="white" />
+                <Text style={styles.featuredLabelText}>AVISO IMPORTANTE</Text>
               </View>
               <Pressable onPress={() => handleReminderPress(filteredReminder)}>
                 <Reminder {...filteredReminder} />
@@ -227,11 +243,11 @@ export default function Home() {
         isManager={isManager}
         onEdit={() => {
           setIsDetailVisible(false);
-          handleEdit(selectedItem, activeTab === 'noticias' ? 'news' : 'event');
+          handleEdit(selectedItem, getItemType(selectedItem));
         }}
         onDelete={() => {
           setIsDetailVisible(false);
-          handleDelete(selectedItem, activeTab === 'noticias' ? 'news' : 'event');
+          handleDelete(selectedItem, getItemType(selectedItem));
         }}
       />
     </ScrollViewLayout>

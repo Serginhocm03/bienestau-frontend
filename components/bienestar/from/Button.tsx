@@ -49,20 +49,9 @@ const Pressable = forwardRef<View, PressableProps>(
     const darkColor = color === "text" ? Colors.text : (Colors[`${color}_dark`] || Colors.primary_dark);
     const accentColor = Colors.accent || "#E2E8F0";
 
-    const animatedStyle = {
-      solid: useAnimatedStyle(
-        () => ({
-          backgroundColor: interpolateColor(
-            pressed.value,
-            [0, 1],
-            [baseColor, darkColor]
-          ),
-          borderWidth: 0,
-        }),
-        [pressed, baseColor, darkColor]
-      ),
-      outline: useAnimatedStyle(
-        () => ({
+    const containerAnimatedStyle = useAnimatedStyle(() => {
+      if (type === "outline") {
+        return {
           borderColor: baseColor,
           backgroundColor: interpolateColor(
             pressed.value,
@@ -70,50 +59,54 @@ const Pressable = forwardRef<View, PressableProps>(
             ["#FFFFFF00", accentColor]
           ),
           borderWidth: 1,
-        }),
-        [pressed, baseColor, accentColor]
-      ),
-      text: useAnimatedStyle(
-        () => ({
+        };
+      }
+      if (type === "text") {
+        return {
           backgroundColor: interpolateColor(
             pressed.value,
             [0, 1],
             ["#FFFFFF00", accentColor]
           ),
           borderWidth: 0,
-        }),
-        [pressed, accentColor]
-      ),
-    };
+        };
+      }
+      return {
+        backgroundColor: interpolateColor(
+          pressed.value,
+          [0, 1],
+          [baseColor, darkColor]
+        ),
+        borderWidth: 0,
+      };
+    }, [pressed, baseColor, darkColor, accentColor, type]);
 
-    const animatedTextStyle = {
-      solid: useAnimatedStyle(
-        () => ({
-          color: interpolateColor(
-            pressed.value,
-            [0, 1],
-            [
-              color === "text" ? accentColor : Colors.alternative,
-              Colors.background,
-            ]
-          ),
-        }),
-        [pressed, color, accentColor]
-      ),
-      outline: {
-        color: baseColor,
-      },
-      text: useAnimatedStyle(
-        () => ({
+    const textAnimatedStyle = useAnimatedStyle(() => {
+      if (type === "outline") {
+        return {
+          color: baseColor,
+        };
+      }
+      if (type === "text") {
+        return {
           color: interpolateColor(
             pressed.value,
             [0, 1],
             [baseColor, darkColor]
           ),
-        }),
-        [pressed, baseColor, darkColor]
-      ),
-    };
+        };
+      }
+      return {
+        color: interpolateColor(
+          pressed.value,
+          [0, 1],
+          [
+            color === "text" ? accentColor : Colors.alternative,
+            Colors.background,
+          ]
+        ),
+      };
+    }, [pressed, color, baseColor, darkColor, accentColor, type]);
 
     const onPressIn = useCallback(() => {
       pressed.value = withTiming(1, { duration: 150 });
@@ -140,7 +133,7 @@ const Pressable = forwardRef<View, PressableProps>(
               flexDirection: "row",
               justifyContent: "center",
             },
-            animatedStyle[type],
+            containerAnimatedStyle,
           ]}
         >
           {isLoading ? (
@@ -149,7 +142,7 @@ const Pressable = forwardRef<View, PressableProps>(
               color={type === "solid" ? Colors.alternative : Colors[color]}
             />
           ) : (
-            <AnimatedText style={[animatedTextStyle[type]]}>
+            <AnimatedText style={[textAnimatedStyle]}>
               {title}
             </AnimatedText>
           )}

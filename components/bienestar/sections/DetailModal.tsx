@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { Modal, View, ScrollView, Pressable, useWindowDimensions, StyleSheet, Image as RNImage } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Modal,
+  View,
+  ScrollView,
+  Pressable,
+  useWindowDimensions,
+  StyleSheet,
+  Image as RNImage,
+  Alert,
+} from "react-native";
 import { Image } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
 import { buildMediaUrl } from "@/lib/bienestar/api";
 import { Colors } from "@/constants/bienestar/colors";
 import { Media } from "@/types/bienestar/primitives";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
+import { scheduleEventReminder12HoursBefore } from "@/lib/bienestar/notifications";
 
 export interface DetailModalProps {
   visible: boolean;
@@ -19,44 +28,133 @@ export interface DetailModalProps {
     image?: Media;
     url?: string;
     date?: string;
+    fecha_evento?: string;
   } | null;
   isManager?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-export function DetailModal({ visible, onClose, item, isManager = false, onEdit, onDelete }: DetailModalProps) {
+export function DetailModal({
+  visible,
+  onClose,
+  item,
+  isManager = false,
+  onEdit,
+  onDelete,
+}: DetailModalProps) {
   const { width } = useWindowDimensions();
   const [aspectRatio, setAspectRatio] = useState<number>(1);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const resetScroll = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ y: 0, animated: false });
+    }
+  };
 
   useEffect(() => {
+    if (visible) {
+      resetScroll();
+      const timer = setTimeout(() => {
+        resetScroll();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+
     if (item && (item.image?.url || item.url)) {
       const url = buildMediaUrl(item.image?.url || item.url);
-      RNImage.getSize(url, (w, h) => {
-        setAspectRatio(w / h);
-      }, () => setAspectRatio(1));
+      RNImage.getSize(
+        url,
+        (w, h) => {
+          setAspectRatio(w / h);
+        },
+        () => setAspectRatio(1)
+      );
     }
-  }, [item]);
+  }, [visible, item]);
 
   if (!item) return null;
 
-  const imageUrl = item.image ? buildMediaUrl(item.image.url) : (item.url ? buildMediaUrl(item.url) : null);
+  // Normalizar item para soportar objetos planos o anidados dentro de "attributes" (Strapi API v4/v5)
+  const title = item.title || (item as any).attributes?.title || "Sin título";
+  const description = item.description || (item as any).attributes?.description || "";
+  const rawImage = item.image || (item as any).attributes?.image || item.url || (item as any).attributes?.url;
+
+  // Extraer URL de la imagen de forma segura
+  let imageUrl: string | null = null;
+  if (rawImage) {
+    if (typeof rawImage === 'string') {
+      imageUrl = buildMediaUrl(rawImage);
+    } else if (rawImage.url) {
+      imageUrl = buildMediaUrl(rawImage.url);
+    } else if (rawImage.data?.attributes?.url) {
+      imageUrl = buildMediaUrl(rawImage.data.attributes.url);
+    } else if (rawImage.data?.url) {
+      imageUrl = buildMediaUrl(rawImage.data.url);
+    }
+  }
+
+  const displayDate = item.date || item.fecha_evento || (item as any).attributes?.fecha_evento || (item as any).attributes?.date;
+
+  const handleScheduleReminder = async () => {
+    if (!item) return;
+    const scheduled = await scheduleEventReminder12HoursBefore({ ...item, title, fecha_evento: displayDate });
+    if (scheduled) {
+      Alert.alert(
+        "¡Recordatorio Programado!",
+        `Recibirás una notificación en tu dispositivo 12 horas antes del evento "${title}".`
+      );
+    } else {
+      Alert.alert(
+        "Aviso de Recordatorio",
+        "La fecha de este evento ya transcurrió o falta menos de 12 horas para su inicio."
+      );
+    }
+  };
 
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       onRequestClose={onClose}
+      onShow={resetScroll}
+      statusBarTranslucent={true}
     >
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        {/* VENTANA EMERGENTE CENTRADA Y PROFESIONAL */}
+        <View style={styles.dialogCard}>
+          {/* 1. ENCABEZADO DEL DIÁLOGO */}
+          <View style={styles.dialogHeader}>
+            <View style={styles.categoryBadge}>
+              <MaterialCommunityIcons
+                name={displayDate ? "calendar-star" : "newspaper-variant-outline"}
+                size={14}
+                color={Colors.primary}
+              />
+              <Text style={styles.categoryBadgeText}>
+                {displayDate ? "EVENTO" : "NOTICIA"}
+              </Text>
+            </View>
+
+            <Pressable onPress={onClose} style={styles.closeBtnCircle}>
+              <MaterialCommunityIcons name="close" size={20} color={Colors.primary} />
+            </Pressable>
+          </View>
+
+          {/* 2. ÁREA DE CONTENIDO DESLIZANTE */}
           <ScrollView
-            showsVerticalScrollIndicator={false}
+            ref={scrollRef}
+            style={styles.scrollBody}
+            showsVerticalScrollIndicator={true}
+            persistentScrollbar={true}
             contentContainerStyle={styles.scrollContent}
+            bounces={true}
+            overScrollMode="always"
           >
             {imageUrl && (
-              <View style={styles.imageContainer}>
+              <View style={styles.imageCard}>
                 <RNImage
                   source={{ uri: imageUrl }}
                   style={styles.blurBackground}
@@ -65,63 +163,66 @@ export function DetailModal({ visible, onClose, item, isManager = false, onEdit,
                 <Image
                   source={{ uri: imageUrl }}
                   style={styles.image}
-                  contentFit="contain"
+                  contentFit="cover"
                   transition={200}
                 />
               </View>
             )}
 
-            <View style={styles.textContainer}>
-              <Text type="subtitle" color="primary" style={styles.title}>
-                {item.title}
-              </Text>
+            <Text style={styles.titleText}>{title}</Text>
 
-              {item.date && (
+            {displayDate && (
+              <View style={styles.dateRow}>
                 <View style={styles.dateBadge}>
-                  <Image
-                    source={require("@/assets/images/biñetas.png")}
-                    style={{ width: 16, height: 16, tintColor: Colors.secondary }}
-                    resizeMode="contain"
+                  <MaterialCommunityIcons
+                    name="calendar-clock"
+                    size={15}
+                    color={Colors.secondary}
                   />
-                  <Text style={styles.dateText}>Evento: {item.date}</Text>
+                  <Text style={styles.dateText}>Fecha: {displayDate}</Text>
                 </View>
-              )}
 
-              <View style={styles.divider} />
-              <Text style={styles.description}>
-                {item.description}
+                <Pressable style={styles.reminderBtn} onPress={handleScheduleReminder}>
+                  <MaterialCommunityIcons
+                    name="bell-ring-outline"
+                    size={14}
+                    color="white"
+                  />
+                  <Text style={styles.reminderBtnText}>Recordarme (12h antes)</Text>
+                </Pressable>
+              </View>
+            )}
+
+            <View style={styles.divider} />
+
+            {description ? (
+              <Text style={styles.descriptionText} selectable={true}>
+                {description}
               </Text>
-            </View>
+            ) : (
+              <Text style={[styles.descriptionText, { italic: true, color: "#94A3B8" }]}>
+                Sin descripción disponible.
+              </Text>
+            )}
           </ScrollView>
 
-          {/* Botón de cierre superior premium */}
-          <Pressable onPress={onClose} style={styles.closeBtn}>
-            <BlurView intensity={80} style={styles.blurClose}>
-              <Image
-                source={require("@/assets/images/cerrar.png")}
-                style={{ width: 24, height: 24, tintColor: Colors.primary }}
-                resizeMode="contain"
-              />
-            </BlurView>
-          </Pressable>
-
-          {/* Barra de administración profesional */}
+          {/* 3. BARRA DE ACCIONES ADMINISTRATIVAS EN EL PIE DE LA VENTANA */}
           {isManager && (
-            <View style={styles.adminBar}>
+            <View style={styles.dialogFooter}>
               <Pressable
                 onPress={onEdit}
                 style={[styles.actionBtn, { backgroundColor: Colors.primary }]}
               >
-                <MaterialCommunityIcons name="pencil" size={20} color="white" />
-                <Text style={styles.actionText}>Editar</Text>
+                <MaterialCommunityIcons name="pencil" size={18} color="white" />
+                <Text style={styles.actionBtnText}>Editar</Text>
               </Pressable>
 
               <Pressable
                 onPress={onDelete}
                 style={[styles.actionBtn, { backgroundColor: Colors.secondary }]}
               >
-                <MaterialCommunityIcons name="trash-can-outline" size={20} color="white" />
-                <Text style={styles.actionText}>Eliminar</Text>
+                <MaterialCommunityIcons name="trash-can-outline" size={18} color="white" />
+                <Text style={styles.actionBtnText}>Eliminar</Text>
               </Pressable>
             </View>
           )}
@@ -131,43 +232,78 @@ export function DetailModal({ visible, onClose, item, isManager = false, onEdit,
   );
 }
 
-function LinearGradientOverlay() {
-    return (
-        <View style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 80,
-            backgroundColor: 'transparent',
-            // Simulación de degradado para suavizar la transición a blanco
-        }} />
-    )
-}
-
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "flex-end",
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
   },
-  container: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    height: "92%",
+  dialogCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
     width: "100%",
+    maxWidth: 440,
+    maxHeight: "88%",
     overflow: "hidden",
-    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 12,
+    display: "flex",
+    flexDirection: "column",
+  },
+  dialogHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  categoryBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#EFF6FF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: Colors.primary,
+    letterSpacing: 0.8,
+  },
+  closeBtnCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F1F5F9",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollBody: {
+    flexShrink: 1,
   },
   scrollContent: {
-    paddingBottom: 120,
+    flexGrow: 1,
+    padding: 20,
+    paddingBottom: 30,
   },
-  imageContainer: {
+  imageCard: {
     width: "100%",
-    height: 300,
-    backgroundColor: "#000",
-    position: 'relative',
+    height: 200,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "#000000",
+    marginBottom: 16,
+    position: "relative",
   },
   blurBackground: {
     ...StyleSheet.absoluteFillObject,
@@ -177,94 +313,84 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  textContainer: {
-    padding: 24,
-  },
-  title: {
-    fontSize: 26,
-    lineHeight: 32,
+  titleText: {
+    fontSize: 20,
+    lineHeight: 26,
     fontWeight: "800",
-    marginBottom: 16,
+    color: Colors.primary,
+    marginBottom: 12,
+  },
+  dateRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 14,
   },
   dateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#F8FAFC",
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
   dateText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#475569',
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#334155",
+  },
+  reminderBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  reminderBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "800",
   },
   divider: {
-    height: 4,
-    width: 40,
+    height: 3,
+    width: 36,
     backgroundColor: Colors.secondary,
     borderRadius: 2,
-    marginBottom: 20,
+    marginBottom: 14,
   },
-  description: {
-    fontSize: 17,
-    lineHeight: 26,
+  descriptionText: {
+    fontSize: 15,
+    lineHeight: 24,
     color: "#334155",
-    textAlign: "justify",
+    textAlign: "left",
   },
-  closeBtn: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    zIndex: 10,
-  },
-  blurClose: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    backgroundColor: "rgba(255,255,255,0.7)",
-  },
-  adminBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    paddingBottom: 34,
-    backgroundColor: "white",
+  dialogFooter: {
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: "#FFFFFF",
     flexDirection: "row",
-    gap: 16,
+    gap: 12,
     borderTopWidth: 1,
     borderTopColor: "#F1F5F9",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 20,
   },
   actionBtn: {
     flex: 1,
-    height: 54,
-    borderRadius: 16,
+    height: 46,
+    borderRadius: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: 8,
   },
-  actionText: {
-    color: "white",
-    fontSize: 16,
+  actionBtnText: {
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "700",
-  }
+  },
 });

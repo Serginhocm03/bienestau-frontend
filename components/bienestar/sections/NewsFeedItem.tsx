@@ -5,7 +5,6 @@ import { Text } from "@/components/bienestar/primitives/Text";
 import { Colors } from "@/constants/bienestar/colors";
 import { buildMediaUrl } from "@/lib/bienestar/api";
 import { Media } from "@/types/bienestar/primitives";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export interface NewsFeedItemProps {
   title: string;
@@ -13,9 +12,6 @@ export interface NewsFeedItemProps {
   image?: Media;
   tag?: string;
   onPress?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  isManager?: boolean;
   isLast?: boolean;
 }
 

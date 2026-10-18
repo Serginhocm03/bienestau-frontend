@@ -2,7 +2,7 @@
   "expo": {
     "name": "bienestau",
     "slug": "bienestau",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -12,18 +12,19 @@
       "supportsTablet": true
     },
     "android": {
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#F2F5F7"
       },
-      "package": "com.sanpezlo.newbienestau",
+      "package": "com.sanpezlo.bienestauapp",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.CAMERA",
         "android.permission.VIBRATE",
-        "android.permission.WAKE_LOCK"
+        "android.permission.WAKE_LOCK",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -63,6 +64,8 @@
         "expo-build-properties",
         {
           "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
             "usesCleartextTraffic": true
           }
         }
@@ -89,9 +92,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5b4b721c-4073-42de-badc-90d50e2bfc33"
+        "projectId": "90306ef0-6145-40fb-bc9f-774a6b180bd6"
       }
-    },
-    "owner": "sergiocabrera3"
+    }
   }
 }

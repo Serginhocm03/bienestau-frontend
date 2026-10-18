@@ -1,4 +1,4 @@
-package com.sanpezlo.newbienestau
+package com.sanpezlo.bienestauapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

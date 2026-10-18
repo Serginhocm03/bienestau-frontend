@@ -1,4 +1,7 @@
+import React, { useState } from "react";
 import {
+  Pressable,
+  StyleSheet,
   TextInput as TextInputNative,
   TextInputProps as TextInputNativeProps,
   View,
@@ -10,35 +13,109 @@ import {
   FieldPath,
   FieldValues,
 } from "react-hook-form";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { Colors } from "@/constants/bienestar/colors";
 import { Text } from "@/components/bienestar/primitives/Text";
 
 export interface TextInputProps extends TextInputNativeProps {
   color?: keyof typeof Colors;
+  leftIcon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  isPassword?: boolean;
 }
 
-export function TextInput({ color = "accent", ...props }: TextInputProps) {
+export function TextInput({
+  color = "accent",
+  style,
+  multiline,
+  leftIcon,
+  isPassword = false,
+  secureTextEntry,
+  ...props
+}: TextInputProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isSecure = isPassword ? !showPassword : secureTextEntry;
+
   return (
-    <TextInputNative
-      {...props}
-      style={{
-        borderColor: Colors[color],
-        color:
-          Colors[["primary", "secondary"].includes(color) ? color : "text"],
-        borderWidth: 1,
-        borderRadius: 5,
-        paddingHorizontal: 8,
-        fontSize: 14,
-      }}
-    />
+    <View
+      style={[
+        styles.inputContainer,
+        {
+          borderColor: color === "secondary" ? Colors.secondary : "#CBD5E1",
+          minHeight: multiline ? 90 : 50,
+        },
+      ]}
+    >
+      {leftIcon && (
+        <View style={styles.iconBox}>
+          <MaterialCommunityIcons
+            name={leftIcon}
+            size={20}
+            color={color === "secondary" ? Colors.secondary : "#64748B"}
+          />
+        </View>
+      )}
+
+      <TextInputNative
+        {...props}
+        multiline={multiline}
+        secureTextEntry={isSecure}
+        placeholderTextColor="#94A3B8"
+        style={[
+          styles.nativeInput,
+          {
+            color: Colors.text,
+          },
+          style,
+        ]}
+      />
+
+      {isPassword && (
+        <Pressable
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.iconBoxRight}
+        >
+          <MaterialCommunityIcons
+            name={showPassword ? "eye-off-outline" : "eye-outline"}
+            size={20}
+            color="#64748B"
+          />
+        </Pressable>
+      )}
+    </View>
   );
 }
 
+const styles = StyleSheet.create({
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#FFFFFF",
+  },
+  iconBox: {
+    marginRight: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  iconBoxRight: {
+    padding: 6,
+    marginLeft: 4,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  nativeInput: {
+    flex: 1,
+    fontSize: 14,
+    paddingVertical: 12,
+  },
+});
+
 /**
  * Props for the Text Input Controller component.
- *
- * The typing of the props is a duplicate of the original source code.
  */
 export interface TextInputControllerProps<
   T extends FieldValues = FieldValues,
@@ -49,7 +126,7 @@ export interface TextInputControllerProps<
 }
 
 /**
- * This type is a utility to assist the typing system.
+ * Utility type for error resolution.
  */
 type ControllerError =
   | {
@@ -62,7 +139,6 @@ type ControllerError =
 
 /**
  * Wrapper around the TextInput Controller component.
- * The typing of the component is a duplicate of the original source code.
  */
 export function TextInputController<
   T extends FieldValues = FieldValues,
@@ -81,7 +157,7 @@ export function TextInputController<
     <ControllerNative
       {...props}
       render={({ field: { value, onChange, onBlur } }) => (
-        <View>
+        <View style={{ width: "100%" }}>
           <TextInput
             {...inputProps}
             color={controllerError.error ? "secondary" : "accent"}
@@ -90,7 +166,12 @@ export function TextInputController<
             onBlur={onBlur}
           />
           {controllerError.error && (
-            <Text color="secondary">{controllerError.message}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4, marginLeft: 2 }}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={14} color={Colors.secondary} />
+              <Text color="secondary" style={{ fontSize: 12 }}>
+                {controllerError.message}
+              </Text>
+            </View>
           )}
         </View>
       )}

@@ -22,11 +22,13 @@ export type Auth =
       token: string;
       authenticated: true;
       user: User;
+      rememberMe?: boolean;
     }
   | {
       token: null;
       authenticated: false;
       user: null;
+      rememberMe?: boolean;
     };
 
 const DefaultAuth: Auth = {
@@ -117,52 +119,53 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   // EFECTO 2: Guardar/borrar token cuando auth cambia
   useEffect(() => {
     console.log('🎬 EFECTO 2 - Guardar/borrar token');
-    
-    if (!isConnected) return;
-
     (async () => {
-      if (auth.authenticated) {
-        const token = auth.token;
+      if (auth.authenticated && auth.token) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${auth.token}`;
 
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        console.log('💾 Guardando token en SecureStore...');
-
-        if (Platform.OS !== "android" && Platform.OS !== "ios") return;
-        await SecureStore.setItemAsync(env.TOKEN_KEY, token);
-        console.log('✅ Token guardado');
+        if (Platform.OS === "android" || Platform.OS === "ios") {
+          if (auth.rememberMe !== false) {
+            console.log('💾 Guardando token en SecureStore (Mantener sesión activado)...');
+            await SecureStore.setItemAsync(env.TOKEN_KEY, auth.token);
+            console.log('✅ Token guardado persistentemente');
+          } else {
+            console.log('ℹ️ Sesión temporal activada (No guardar token persistentemente)...');
+            await SecureStore.deleteItemAsync(env.TOKEN_KEY);
+          }
+        }
       } else {
         axios.defaults.headers.common["Authorization"] = "";
         console.log('🗑️ Borrando token de SecureStore...');
 
-        if (Platform.OS !== "android" && Platform.OS !== "ios") return;
-        await SecureStore.deleteItemAsync(env.TOKEN_KEY);
-        console.log('✅ Token borrado');
+        if (Platform.OS === "android" || Platform.OS === "ios") {
+          await SecureStore.deleteItemAsync(env.TOKEN_KEY);
+          console.log('✅ Token borrado');
+        }
       }
     })();
-  }, [isConnected, auth.token]);
+  }, [auth.authenticated, auth.token, auth.rememberMe]);
 
-// EFECTO 3: Navegación según estado de auth
+  // EFECTO 3: Navegación según estado de auth
   useEffect(() => {
     console.log('🎬 EFECTO 3 - Navegación');
 
-    // Ignorar si isConnected es null (el SDK aún está detectando la red)
-    if (isConnected === null || isLoading) {
-      console.log('⏸️ Esperando... (isConnected o isLoading)');
+    if (isLoading) {
+      console.log('⏸️ Esperando... (isLoading)');
       return;
     }
 
     // Lógica de protección de rutas
     const inAuthGroup = segments.includes("(protected)" as never);
-    console.log('🔒 En zona protegida:', inAuthGroup);
+    console.log('🔒 En zona protegida:', inAuthGroup, 'Auth:', auth.authenticated);
 
     if (!auth.authenticated && inAuthGroup) {
       console.log('🚫 No autenticado en zona protegida - Redirigiendo a login');
-      router.replace("/");
+      router.replace("/(auth)");
     } else if (auth.authenticated && !inAuthGroup) {
       console.log('✅ Autenticado - Redirigiendo a /bienestar');
       router.replace("/(protected)/bienestar");
     }
-  }, [isConnected, auth.authenticated, isLoading]);
+  }, [auth.authenticated, isLoading, segments]);
 
   // EFECTO 4: Registrar token de notificaciones después del login
 useEffect(() => {

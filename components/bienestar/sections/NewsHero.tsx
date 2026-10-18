@@ -40,11 +40,11 @@ export function NewsHero({ title, description, image, onPress }: NewsHeroProps) 
             <View style={styles.badge}>
               <Text style={styles.badgeText}>DESTACADO</Text>
             </View>
-            <Text type="hero" color="white" style={styles.title}>
+            <Text type="hero" color="white" numberOfLines={3} style={styles.title}>
               {title}
             </Text>
             {description && (
-              <Text type="summary" color="white" numberOfLines={2} style={styles.summary}>
+              <Text type="summary" color="white" numberOfLines={3} style={styles.summary}>
                 {description}
               </Text>
             )}
@@ -67,10 +67,10 @@ const styles = StyleSheet.create({
   gradient: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
-    paddingBottom: 40,
+    paddingBottom: 24,
   },
   content: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
   },
   badge: {
     backgroundColor: Colors.secondary,
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
     alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   badgeText: {
     color: 'white',
@@ -87,16 +87,17 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
+    lineHeight: 30,
     fontWeight: '900',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    marginBottom: 6,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   summary: {
-    fontSize: 16,
-    opacity: 0.85,
-    lineHeight: 22,
+    fontSize: 14,
+    opacity: 0.9,
+    lineHeight: 20,
   }
 });

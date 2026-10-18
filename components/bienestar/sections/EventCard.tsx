@@ -17,7 +17,14 @@ export interface EventCardProps {
   fecha_evento?: string;
 }
 
-export function EventCard({ title, description, image, tag, onPress, fecha_evento }: EventCardProps) {
+export function EventCard({
+  title,
+  description,
+  image,
+  tag,
+  onPress,
+  fecha_evento,
+}: EventCardProps) {
   const { width } = useWindowDimensions();
   const imageUrl = buildMediaUrl(image?.url);
 
@@ -48,7 +55,7 @@ export function EventCard({ title, description, image, tag, onPress, fecha_event
         </View>
 
         <View style={styles.content}>
-          <Text type="subtitle" color="primary" style={styles.title} numberOfLines={1}>
+          <Text type="subtitle" color="primary" style={styles.title} numberOfLines={2}>
             {title}
           </Text>
 
@@ -64,7 +71,7 @@ export function EventCard({ title, description, image, tag, onPress, fecha_event
           </View>
 
           {description && (
-            <Text style={styles.summary} numberOfLines={2}>
+            <Text style={styles.summary} numberOfLines={3}>
               {description}
             </Text>
           )}

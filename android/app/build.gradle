@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.sanpezlo.newbienestau'
+    namespace 'com.sanpezlo.bienestauapp'
     defaultConfig {
-        applicationId 'com.sanpezlo.newbienestau'
+        applicationId 'com.sanpezlo.bienestauapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 8

@@ -41,6 +41,22 @@ export type AuthLocalRegisterRequest = {
 
 export type AuthLocalRegisterResponse = AuthLocalResponse;
 
+export type AuthForgotPasswordRequest = {
+  email: string;
+};
+
+export type AuthForgotPasswordResponse = {
+  ok: boolean;
+};
+
+export type AuthResetPasswordRequest = {
+  code: string;
+  password: string;
+  passwordConfirmation: string;
+};
+
+export type AuthResetPasswordResponse = AuthLocalResponse;
+
 export type HomeResponse = {
   data: Home;
   meta: Meta;
