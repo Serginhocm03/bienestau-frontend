@@ -92,8 +92,8 @@ android {
         applicationId 'com.sanpezlo.bienestauapp'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 36
-        versionCode 11
-        versionName "2.0.1"
+        versionCode 15
+        versionName "2.0.2"
     }
     signingConfigs {
         debug {
