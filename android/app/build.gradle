@@ -85,14 +85,14 @@ android {
     ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    compileSdk 36
 
     namespace 'com.sanpezlo.bienestauapp'
     defaultConfig {
         applicationId 'com.sanpezlo.bienestauapp'
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10
+        targetSdkVersion 36
+        versionCode 11
         versionName "2.0.1"
     }
     signingConfigs {
