@@ -10,8 +10,10 @@ import {
   Alert,
 } from "react-native";
 import { Image } from "expo-image";
+import { WebView } from "react-native-webview";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text } from "@/components/bienestar/primitives/Text";
-import { buildMediaUrl } from "@/lib/bienestar/api";
+import { buildMediaUrl, isVideoMedia } from "@/lib/bienestar/api";
 import { Colors } from "@/constants/bienestar/colors";
 import { Media } from "@/types/bienestar/primitives";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -43,6 +45,7 @@ export function DetailModal({
   onEdit,
   onDelete,
 }: DetailModalProps) {
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [aspectRatio, setAspectRatio] = useState<number>(1);
   const scrollRef = useRef<ScrollView>(null);
@@ -81,7 +84,7 @@ export function DetailModal({
   const description = item.description || (item as any).attributes?.description || "";
   const rawImage = item.image || (item as any).attributes?.image || item.url || (item as any).attributes?.url;
 
-  // Extraer URL de la imagen de forma segura
+  // Extraer URL de la imagen/video de forma segura
   let imageUrl: string | null = null;
   if (rawImage) {
     if (typeof rawImage === 'string') {
@@ -95,6 +98,7 @@ export function DetailModal({
     }
   }
 
+  const isVideo = isVideoMedia(imageUrl);
   const displayDate = item.date || item.fecha_evento || (item as any).attributes?.fecha_evento || (item as any).attributes?.date;
 
   const handleScheduleReminder = async () => {
@@ -122,7 +126,7 @@ export function DetailModal({
       onShow={resetScroll}
       statusBarTranslucent={true}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { paddingBottom: Math.max(16, insets.bottom + 10) }]}>
         {/* VENTANA EMERGENTE CENTRADA Y PROFESIONAL */}
         <View style={styles.dialogCard}>
           {/* 1. ENCABEZADO DEL DIÁLOGO */}
@@ -155,17 +159,44 @@ export function DetailModal({
           >
             {imageUrl && (
               <View style={styles.imageCard}>
-                <RNImage
-                  source={{ uri: imageUrl }}
-                  style={styles.blurBackground}
-                  blurRadius={15}
-                />
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={styles.image}
-                  contentFit="cover"
-                  transition={200}
-                />
+                {isVideo ? (
+                  <WebView
+                    source={{
+                      html: `
+                        <!DOCTYPE html>
+                        <html>
+                          <head>
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+                            <style>
+                              body, html { margin: 0; padding: 0; background-color: #000; height: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+                              video { width: 100%; height: 100%; max-height: 100vh; object-fit: contain; }
+                            </style>
+                          </head>
+                          <body>
+                            <video src="${imageUrl}" controls playsinline autoplay loop muted></video>
+                          </body>
+                        </html>
+                      `
+                    }}
+                    style={{ width: "100%", height: "100%", borderRadius: 16 }}
+                    allowsInlineMediaPlayback={true}
+                    mediaPlaybackRequiresUserAction={false}
+                  />
+                ) : (
+                  <>
+                    <RNImage
+                      source={{ uri: imageUrl }}
+                      style={styles.blurBackground}
+                      blurRadius={15}
+                    />
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.image}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </>
+                )}
               </View>
             )}
 

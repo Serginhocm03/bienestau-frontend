@@ -50,6 +50,16 @@ export function buildMediaUrl(url: string | undefined | null) {
 }
 
 /**
+ * Checks whether a given media URL or path corresponds to a video file.
+ */
+export function isVideoMedia(url: string | undefined | null): boolean {
+  if (!url) return false;
+  const cleanUrl = url.split('?')[0].toLowerCase();
+  const videoExtensions = ['.mp4', '.mov', '.avi', '.m4v', '.webm', '.mkv', '.3gp', '.flv'];
+  return videoExtensions.some((ext) => cleanUrl.endsWith(ext)) || cleanUrl.includes('/video/') || cleanUrl.includes('video_');
+}
+
+/**
  * Builds the URL for the API endpoint.
  * @param key - The resource key for the API endpoint.
  * @param populate - Whether to add the deep populate parameter (default: true).

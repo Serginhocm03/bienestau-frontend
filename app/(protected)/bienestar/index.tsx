@@ -22,6 +22,7 @@ import axios from "axios";
 import { useQueryClient } from "@tanstack/react-query";
 import { buildUrl } from "@/lib/bienestar/api";
 import { scheduleAllUpcomingEventReminders } from "@/lib/bienestar/notifications";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Home() {
   const router = useRouter();
@@ -132,6 +133,8 @@ export default function Home() {
 
   const heroNews = news && news.length > 0 ? news[0] : null;
 
+  const insets = useSafeAreaInsets();
+
   return (
     <ScrollViewLayout
       layout={{ height: 0, minHeight: 0 }}
@@ -140,7 +143,7 @@ export default function Home() {
       floatingAction={
         isManager && (
           <Pressable
-            style={styles.fab}
+            style={[styles.fab, { bottom: Math.max(30, insets.bottom + 16) }]}
             onPress={() => {
               router.push("/(protected)/bienestar/create");
             }}

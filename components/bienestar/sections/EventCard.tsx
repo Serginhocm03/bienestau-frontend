@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, useWindowDimensions, Pressable, Image as RNImage } from "react-native";
 import { Image } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
-import { buildMediaUrl } from "@/lib/bienestar/api";
+import { buildMediaUrl, isVideoMedia } from "@/lib/bienestar/api";
 import { Media } from "@/types/bienestar/primitives";
 import { Colors } from "@/constants/bienestar/colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -27,6 +27,7 @@ export function EventCard({
 }: EventCardProps) {
   const { width } = useWindowDimensions();
   const imageUrl = buildMediaUrl(image?.url);
+  const isVideo = isVideoMedia(image?.url);
 
   return (
     <View style={styles.cardWrapper}>
@@ -43,13 +44,18 @@ export function EventCard({
             contentFit="contain"
             transition={200}
           />
+          {isVideo && (
+            <View style={[StyleSheet.absoluteFillObject, { justifyContent: 'center', alignItems: 'center' }]}>
+              <MaterialCommunityIcons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
+            </View>
+          )}
           <LinearGradient
             colors={['rgba(0,0,0,0.4)', 'transparent']}
             style={styles.topGradient}
           />
-          {tag && (
+          {(tag || isVideo) && (
             <View style={styles.tagBadge}>
-              <Text style={styles.tagText}>{tag}</Text>
+              <Text style={styles.tagText}>{isVideo ? "VIDEO" : tag}</Text>
             </View>
           )}
         </View>

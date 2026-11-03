@@ -2,10 +2,11 @@ import React from "react";
 import { View, StyleSheet, useWindowDimensions, Pressable, Image as RNImage } from "react-native";
 import { Image } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
-import { buildMediaUrl } from "@/lib/bienestar/api";
+import { buildMediaUrl, isVideoMedia } from "@/lib/bienestar/api";
 import { Media } from "@/types/bienestar/primitives";
 import { Colors } from "@/constants/bienestar/colors";
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export interface NewsHeroProps {
   title: string;
@@ -17,6 +18,7 @@ export interface NewsHeroProps {
 export function NewsHero({ title, description, image, onPress }: NewsHeroProps) {
   const { width, height } = useWindowDimensions();
   const imageUrl = buildMediaUrl(image?.url);
+  const isVideo = isVideoMedia(image?.url);
 
   return (
     <View style={[styles.container, { width, height: height * 0.55 }]}>
@@ -32,13 +34,27 @@ export function NewsHero({ title, description, image, onPress }: NewsHeroProps) 
           contentFit="contain"
           transition={200}
         />
+        {isVideo && (
+          <View style={StyleSheet.absoluteFillObject}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <MaterialCommunityIcons name="play-circle" size={64} color="rgba(255,255,255,0.9)" />
+            </View>
+          </View>
+        )}
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.8)']}
           style={styles.gradient}
         >
           <View style={styles.content}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>DESTACADO</Text>
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>DESTACADO</Text>
+              </View>
+              {isVideo && (
+                <View style={[styles.badge, { backgroundColor: Colors.primary }]}>
+                  <Text style={styles.badgeText}>VIDEO</Text>
+                </View>
+              )}
             </View>
             <Text type="hero" color="white" numberOfLines={3} style={styles.title}>
               {title}

@@ -20,6 +20,7 @@ import { AnimatedText } from "@/components/bienestar/primitives/Text";
 import { Header } from "@/components/bienestar/layout/Header";
 import { Header as IHeader, Layout } from "@/types/bienestar/components";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface ScrollViewLayoutProps extends ScrollViewProps {
   header: IHeader;
@@ -116,10 +117,16 @@ export function ScrollViewLayout({
     [stickyImage, layout]
   );
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={[{ flex: 1, backgroundColor: Colors.background }, props.style]}>
       <ScrollView
         {...props}
+        contentContainerStyle={[
+          props.contentContainerStyle,
+          { paddingBottom: Math.max(20, insets.bottom + 10) }
+        ]}
         ref={scrollRef}
         refreshControl={
           <RefreshControl

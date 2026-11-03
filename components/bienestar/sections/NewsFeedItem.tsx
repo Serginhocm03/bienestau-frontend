@@ -3,8 +3,9 @@ import { View, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { Text } from "@/components/bienestar/primitives/Text";
 import { Colors } from "@/constants/bienestar/colors";
-import { buildMediaUrl } from "@/lib/bienestar/api";
+import { buildMediaUrl, isVideoMedia } from "@/lib/bienestar/api";
 import { Media } from "@/types/bienestar/primitives";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export interface NewsFeedItemProps {
   title: string;
@@ -23,6 +24,8 @@ export function NewsFeedItem({
   onPress,
   isLast = false,
 }: NewsFeedItemProps) {
+  const isVideo = isVideoMedia(image?.url);
+
   return (
     <View style={styles.container}>
       <Pressable onPress={onPress} style={styles.content}>
@@ -45,12 +48,19 @@ export function NewsFeedItem({
             </Text>
           )}
         </View>
-        <Image
-          source={{ uri: buildMediaUrl(image?.url) }}
-          style={[styles.thumbnail, { backgroundColor: '#F8FAFC' }]}
-          contentFit="contain"
-          transition={200}
-        />
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={{ uri: buildMediaUrl(image?.url) }}
+            style={[styles.thumbnail, { backgroundColor: '#F8FAFC' }]}
+            contentFit="contain"
+            transition={200}
+          />
+          {isVideo && (
+            <View style={[StyleSheet.absoluteFillObject, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)', borderRadius: 4 }]}>
+              <MaterialCommunityIcons name="play-circle" size={28} color="white" />
+            </View>
+          )}
+        </View>
       </Pressable>
       {!isLast && <View style={styles.separator} />}
     </View>
