@@ -317,7 +317,7 @@ export default function Profile() {
         <Button
           title="CERRAR SESIÓN"
           onPress={handleLogout}
-          color="accent"
+          color="secondary"
         />
       </View>
     </ScrollView>

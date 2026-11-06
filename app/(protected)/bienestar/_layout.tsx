@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications';
  */
 export default function TabLayout() {
   const segments = useSegments();
-  const hideTabBar = segments.includes("action-line");
+  const hideTabBar = segments.includes("action-line" as never);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function TabLayout() {
   }, []);
 
   // Si el usuario entra a la pestaña de avisos, reseteamos el contador
-  const isAtReminders = segments.includes("reminders");
+  const isAtReminders = segments.includes("reminders" as never);
   useEffect(() => {
     if (isAtReminders) {
       setUnreadCount(0);

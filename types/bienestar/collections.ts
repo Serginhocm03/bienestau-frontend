@@ -35,6 +35,8 @@ export type Reminder = {
   publishedAt: string;
   contentId?: string;
   contentType?: 'news' | 'event';
+  fecha_evento?: string;
+  date?: string;
 };
 
 export type Person = {
@@ -51,6 +53,7 @@ export type Person = {
 };
 
 export type User = {
+  name?: string;
   blocked: boolean;
   confirmed: boolean;
   createdAt: string;
@@ -74,6 +77,8 @@ export type EventCollection = {
   updatedAt: string;
   publishedAt: string;
   image: Media;
+  fecha_evento?: string;
+  date?: string;
 };
 
 export type New = {

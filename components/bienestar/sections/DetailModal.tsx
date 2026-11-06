@@ -231,7 +231,7 @@ export function DetailModal({
                 {description}
               </Text>
             ) : (
-              <Text style={[styles.descriptionText, { italic: true, color: "#94A3B8" }]}>
+              <Text style={[styles.descriptionText, { fontStyle: "italic", color: "#94A3B8" }]}>
                 Sin descripción disponible.
               </Text>
             )}

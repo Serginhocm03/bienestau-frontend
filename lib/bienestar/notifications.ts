@@ -147,7 +147,7 @@ export async function scheduleEventReminder12HoursBefore(event: {
         },
         sound: true,
       },
-      trigger: triggerDate,
+      trigger: triggerDate as any,
     });
 
     console.log(`✅ Recordatorio programado para "${event.title}" el ${triggerDate.toLocaleString()}`);
