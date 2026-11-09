@@ -22,6 +22,15 @@ export default function Welfare() {
     error: error?.message
   });
 
+  // Separar el ítem de "Acompañamiento" para colocarlo en el rectángulo grande superior (100% ancho)
+  const acompanamientoItem = actionLines?.find((item) =>
+    item.header.title.toLowerCase().includes("acompañamiento")
+  ) || (actionLines && actionLines.length > 0 ? actionLines[0] : null);
+
+  const otherActionLines = actionLines?.filter(
+    (item) => item !== acompanamientoItem
+  ) || [];
+
   return (
     <ScrollViewLayout
       header={isPending || !welfare ? { title: "" } : welfare.header}
@@ -35,7 +44,61 @@ export default function Welfare() {
         </View>
       ) : (
         <View style={styles.container}>
-          {/* 1. SECCIÓN VICERRECTORÍA (GRANDE ARRIBA) */}
+          {/* 1. LÍNEAS DE ACCIÓN (PRIMERO ARRIBA DE TODO) */}
+          <View style={styles.section}>
+            <View style={styles.headerRow}>
+              <View style={styles.line} />
+              <Text color="primary" style={styles.sectionTitle}>
+                LÍNEAS DE ACCIÓN
+              </Text>
+            </View>
+
+            {/* RECTÁNGULO GRANDE SUPERIOR (ACOMPAÑAMIENTO INTEGRAL - 100% ANCHO) */}
+            {acompanamientoItem && (
+              <View style={styles.featuredGridItem}>
+                <Link
+                  href={{
+                    pathname: "/(protected)/bienestar/welfare/action-line",
+                    params: {
+                      actionLineJson: JSON.stringify(acompanamientoItem, null, 2),
+                    },
+                  }}
+                  asChild
+                >
+                  <ActionLineCard item={acompanamientoItem} isFeatured={true} />
+                </Link>
+              </View>
+            )}
+
+            {/* CUADRÍCULA 2x2 ABAJO PARA LAS DEMÁS LÍNEAS DE ACCIÓN (50% ANCHO CADA UNA) */}
+            <View style={styles.grid}>
+              {otherActionLines && otherActionLines.length > 0 ? (
+                otherActionLines.map((item) => (
+                  <View key={item.documentId || item.id} style={styles.gridItem}>
+                    <Link
+                      href={{
+                        pathname: "/(protected)/bienestar/welfare/action-line",
+                        params: {
+                          actionLineJson: JSON.stringify(item, null, 2),
+                        },
+                      }}
+                      asChild
+                    >
+                      <ActionLineCard item={item} />
+                    </Link>
+                  </View>
+                ))
+              ) : !acompanamientoItem ? (
+                [1, 2, 3, 4].map((i) => (
+                  <View key={i} style={[styles.gridItem, { opacity: 0.1 }]}>
+                    <View style={[styles.gridItemContent, { height: 100, backgroundColor: '#CCC', borderRadius: 20 }]} />
+                  </View>
+                ))
+              ) : null}
+            </View>
+          </View>
+
+          {/* 2. SECCIÓN VICERRECTORÍA (REUBICADA ABAJO DE LÍNEAS DE ACCIÓN) */}
           <View style={styles.vicerrectoraSection}>
             <View style={styles.headerRow}>
               <View style={styles.line} />
@@ -74,43 +137,6 @@ export default function Welfare() {
                   Todas las personas tenemos la capacidad de transformar el mundo a través de la fraternidad y el amor inspirados por los principios Franciscanos y Capuchinos.
                 </Text>
               </View>
-            </View>
-          </View>
-
-          {/* 2. LÍNEAS DE ACCIÓN (CUADRÍCULA 2x2 ABAJO) */}
-          <View style={styles.section}>
-            <View style={styles.headerRow}>
-              <View style={styles.line} />
-              <Text color="primary" style={styles.sectionTitle}>
-                LÍNEAS DE ACCIÓN
-              </Text>
-            </View>
-
-            <View style={styles.grid}>
-              {actionLines && actionLines.length > 0 ? (
-                actionLines.map((item, index) => (
-                    <View key={item.documentId || item.id} style={styles.gridItem}>
-                    <Link
-                        href={{
-                        pathname: "/(protected)/bienestar/welfare/action-line",
-                        params: {
-                            actionLineJson: JSON.stringify(item, null, 2),
-                        },
-                        }}
-                        asChild
-                    >
-                        <ActionLineCard item={item} />
-                    </Link>
-                    </View>
-                ))
-              ) : (
-                // Placeholder para cuando no hay datos
-                [1,2,3,4].map((i) => (
-                    <View key={i} style={[styles.gridItem, { opacity: 0.1 }]}>
-                        <View style={[styles.gridItemContent, { height: 100, backgroundColor: '#CCC', borderRadius: 20 }]} />
-                    </View>
-                ))
-              )}
             </View>
           </View>
 
@@ -248,6 +274,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     paddingHorizontal: 12,
+  },
+  featuredGridItem: {
+    paddingHorizontal: 20,
+    width: "100%",
   },
   gridItem: {
     width: "50%",

@@ -11,16 +11,17 @@ export interface ActionLineCardProps {
   item: ActionLine;
   onPress?: () => void;
   style?: ViewStyle;
+  isFeatured?: boolean;
 }
 
-export function ActionLineCard({ item, onPress, style }: ActionLineCardProps) {
+export function ActionLineCard({ item, onPress, style, isFeatured = false }: ActionLineCardProps) {
   const localBanner = getLocalBanner(item.header.title);
   const hasImage = !!item.header.image || !!localBanner;
   const symbol = getEmojiSymbol(item.header.title);
 
   return (
-    <Pressable onPress={onPress} style={[styles.container, style]}>
-      <View style={styles.imageWrapper}>
+    <Pressable onPress={onPress} style={[styles.container, isFeatured && styles.featuredContainer, style]}>
+      <View style={[styles.imageWrapper, isFeatured && styles.featuredImageWrapper]}>
         {hasImage ? (
           <Image
             source={localBanner ? localBanner : { uri: buildMediaUrl(item.header.image?.url) }}
@@ -39,11 +40,11 @@ export function ActionLineCard({ item, onPress, style }: ActionLineCardProps) {
           style={styles.gradient}
         >
           <View style={styles.textContainer}>
-            <View style={styles.iconCircle}>
-                {/* Usamos símbolos universales del sistema (Emojis) para asegurar compatibilidad 100% */}
-                <Text style={styles.emojiIcon}>{symbol}</Text>
+            <View style={[styles.iconCircle, isFeatured && styles.featuredIconCircle]}>
+                {/* Símbolos universales del sistema (Emojis) */}
+                <Text style={[styles.emojiIcon, isFeatured && { fontSize: 26 }]}>{symbol}</Text>
             </View>
-            <Text style={styles.title} color="white">
+            <Text style={[styles.title, isFeatured && styles.featuredTitle]} color="white">
               {item.header.title.toUpperCase()}
             </Text>
           </View>
@@ -85,10 +86,17 @@ const styles = StyleSheet.create({
     elevation: 8,
     overflow: 'hidden',
   },
+  featuredContainer: {
+    borderRadius: 24,
+    marginBottom: 16,
+  },
   imageWrapper: {
     width: "100%",
     aspectRatio: 1.8,
     position: "relative",
+  },
+  featuredImageWrapper: {
+    aspectRatio: 2.3,
   },
   image: {
     width: "100%",
@@ -110,7 +118,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     width: '100%',
   },
   iconCircle: {
@@ -122,6 +130,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.6)',
+  },
+  featuredIconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
   },
   emojiIcon: {
     fontSize: 22,
@@ -135,5 +148,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 6,
     flexShrink: 1,
+  },
+  featuredTitle: {
+    fontSize: 15,
+    letterSpacing: 0.8,
   },
 });
