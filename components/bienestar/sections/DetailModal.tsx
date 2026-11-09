@@ -192,7 +192,7 @@ export function DetailModal({
                     <Image
                       source={{ uri: imageUrl }}
                       style={styles.image}
-                      contentFit="cover"
+                      contentFit="contain"
                       transition={200}
                     />
                   </>
@@ -329,10 +329,10 @@ const styles = StyleSheet.create({
   },
   imageCard: {
     width: "100%",
-    height: 200,
+    height: 230,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: "#000000",
+    backgroundColor: "#0F172A",
     marginBottom: 16,
     position: "relative",
   },
