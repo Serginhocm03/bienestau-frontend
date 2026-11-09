@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -23,7 +24,7 @@ import { TextInputController } from "@/components/bienestar/from/TextInput";
 import { useAuth } from "@/context/auth/AuthContext";
 import { Colors } from "@/constants/bienestar/colors";
 import { env } from "@/lib/bienestar/env";
-import { buildUrl } from "@/lib/bienestar/api";
+import { buildMediaUrl, buildUrl } from "@/lib/bienestar/api";
 
 type ChangePasswordFormData = {
   currentPassword: string;
@@ -31,22 +32,34 @@ type ChangePasswordFormData = {
   passwordConfirmation: string;
 };
 
+type EditProfileFormData = {
+  name: string;
+};
+
 export default function Profile() {
   const { auth, setAuth, user } = useAuth();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [isLoadingPassword, setIsLoadingPassword] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  const [passwordSuccessMsg, setPasswordSuccessMsg] = useState<string | null>(null);
+  const [passwordErrorMsg, setPasswordErrorMsg] = useState<string | null>(null);
+  const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
+  const [profileErrorMsg, setProfileErrorMsg] = useState<string | null>(null);
+
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+
+  // Formulario para Cambiar Contraseña
   const {
-    control,
-    handleSubmit,
-    reset,
-    watch,
-    formState: { errors },
+    control: passwordControl,
+    handleSubmit: handlePasswordSubmit,
+    reset: resetPasswordForm,
+    watch: watchPassword,
+    formState: { errors: passwordErrors },
   } = useForm<ChangePasswordFormData>({
     defaultValues: {
       currentPassword: "",
@@ -55,12 +68,26 @@ export default function Profile() {
     },
   });
 
-  const newPasswordValue = watch("password");
+  // Formulario para Editar Nombre
+  const {
+    control: profileControl,
+    handleSubmit: handleProfileSubmit,
+    formState: { errors: profileErrors },
+  } = useForm<EditProfileFormData>({
+    defaultValues: {
+      name: user?.name || "",
+    },
+  });
+
+  const newPasswordValue = watchPassword("password");
+
+  const avatarUrl = user?.avatar?.url ? buildMediaUrl(user.avatar.url) : null;
 
   const handleLogout = async () => {
     try {
       if (Platform.OS === "android" || Platform.OS === "ios") {
         await SecureStore.deleteItemAsync(env.TOKEN_KEY);
+        await SecureStore.deleteItemAsync("bienestau_user_data");
       }
     } catch (e) {
       console.log("Error al borrar token:", e);
@@ -75,10 +102,120 @@ export default function Profile() {
     router.replace("/(auth)");
   };
 
+  // Función para Cambiar Foto de Perfil
+  const pickAndUploadAvatar = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          "Permiso Necesario",
+          "Ve a los ajustes de tu celular y permite el acceso a las fotos para actualizar tu foto de perfil."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        setUploadingAvatar(true);
+
+        const formData = new FormData();
+        const filename = uri.split('/').pop() || 'avatar.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image/jpeg`;
+
+        formData.append('files', {
+          uri: Platform.OS === 'android' ? uri : uri.replace('file://', ''),
+          name: filename,
+          type: type,
+        } as any);
+
+        console.log("🚀 Subiendo nueva foto de perfil...");
+        const response = await fetch(`${env.API}/upload`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${auth.token}`,
+          },
+        });
+
+        const uploadData = await response.json();
+
+        if (response.ok && Array.isArray(uploadData) && uploadData[0]) {
+          const imageId = uploadData[0].id;
+          console.log("✅ Imagen subida. Actualizando usuario con avatar ID:", imageId);
+
+          // Actualizar campo avatar del usuario en Strapi
+          const updateRes = await axios.put(
+            buildUrl("users/me", false),
+            { avatar: imageId },
+            { headers: { Authorization: `Bearer ${auth.token}` } }
+          );
+
+          if (updateRes.data) {
+            const updatedUser = { ...auth.user, avatar: uploadData[0] };
+            setAuth({ ...auth, user: updatedUser as any });
+            if (Platform.OS === "android" || Platform.OS === "ios") {
+              await SecureStore.setItemAsync("bienestau_user_data", JSON.stringify(updatedUser));
+            }
+            Alert.alert("¡Éxito!", "Tu foto de perfil ha sido actualizada.");
+          }
+        } else {
+          throw new Error("No se pudo subir la foto de perfil.");
+        }
+      }
+    } catch (error: any) {
+      console.error("❌ Error subiendo avatar:", error);
+      Alert.alert("Error", error.message || "No se pudo cambiar la foto de perfil.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Función para Editar Nombre
+  const onUpdateProfile = async (data: EditProfileFormData) => {
+    setIsLoadingProfile(true);
+    setProfileErrorMsg(null);
+    setProfileSuccessMsg(null);
+    Keyboard.dismiss();
+
+    try {
+      console.log("🔄 Actualizando nombre de usuario...");
+      const response = await axios.put(
+        buildUrl("users/me", false),
+        { name: data.name },
+        { headers: { Authorization: `Bearer ${auth.token}` } }
+      );
+
+      console.log("✅ Nombre de usuario actualizado");
+      setProfileSuccessMsg("¡Nombre de usuario actualizado correctamente!");
+
+      const updatedUser = { ...auth.user, name: data.name };
+      setAuth({ ...auth, user: updatedUser as any });
+      if (Platform.OS === "android" || Platform.OS === "ios") {
+        await SecureStore.setItemAsync("bienestau_user_data", JSON.stringify(updatedUser));
+      }
+
+      Alert.alert("¡Éxito!", "Tu nombre ha sido actualizado correctamente.");
+    } catch (error: any) {
+      console.error("❌ Error al actualizar perfil:", error?.response?.data || error.message);
+      setProfileErrorMsg("No se pudo actualizar el nombre. Intenta de nuevo.");
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  // Función para Cambiar Contraseña
   const onChangePassword = async (data: ChangePasswordFormData) => {
-    setIsLoading(true);
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    setIsLoadingPassword(true);
+    setPasswordErrorMsg(null);
+    setPasswordSuccessMsg(null);
     Keyboard.dismiss();
 
     try {
@@ -98,8 +235,8 @@ export default function Profile() {
       );
 
       console.log("✅ Contraseña cambiada exitosamente");
-      setSuccessMsg("¡Contraseña actualizada correctamente!");
-      reset();
+      setPasswordSuccessMsg("¡Contraseña actualizada correctamente!");
+      resetPasswordForm();
 
       if (response.data?.jwt) {
         setAuth({
@@ -121,12 +258,12 @@ export default function Profile() {
         serverError === "Identifier or password invalid" ||
         serverError?.toLowerCase().includes("current password")
       ) {
-        setErrorMsg("La contraseña actual no es correcta.");
+        setPasswordErrorMsg("La contraseña actual no es correcta.");
       } else {
-        setErrorMsg(serverError || "No se pudo cambiar la contraseña. Intenta nuevamente.");
+        setPasswordErrorMsg(serverError || "No se pudo cambiar la contraseña. Intenta nuevamente.");
       }
     } finally {
-      setIsLoading(false);
+      setIsLoadingPassword(false);
     }
   };
 
@@ -140,16 +277,34 @@ export default function Profile() {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {/* 1. ENCABEZADO Y PERFIL */}
+      {/* 1. ENCABEZADO Y AVATAR CON BOTÓN DE CÁMARA */}
       <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <ExpoImage
-            source={require("@/assets/images/Perfil.png")}
-            style={{ width: 90, height: 90 }}
-            tintColor={Colors.primary}
-            contentFit="contain"
-          />
+        <View style={styles.avatarWrapper}>
+          {avatarUrl ? (
+            <ExpoImage
+              source={{ uri: avatarUrl }}
+              style={styles.avatarImage}
+              contentFit="cover"
+              transition={200}
+            />
+          ) : (
+            <ExpoImage
+              source={require("@/assets/images/Perfil.png")}
+              style={styles.avatarImage}
+              tintColor={Colors.primary}
+              contentFit="contain"
+            />
+          )}
+
+          <Pressable onPress={pickAndUploadAvatar} style={styles.cameraBadgeBtn}>
+            {uploadingAvatar ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <MaterialCommunityIcons name="camera" size={18} color="white" />
+            )}
+          </Pressable>
         </View>
+
         <Text type="subtitle" color="primary" style={styles.userName}>
           {user?.name || "Usuario"}
         </Text>
@@ -179,7 +334,87 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* 3. SECCIÓN DE CAMBIO DE CONTRASEÑA */}
+      {/* 3. SECCIÓN EDITAR DATOS DE PERFIL (NOMBRE) */}
+      <View style={styles.card}>
+        <Pressable
+          onPress={() => setShowProfileForm(!showProfileForm)}
+          style={styles.cardToggleHeader}
+        >
+          <View style={styles.cardTitleRow}>
+            <MaterialCommunityIcons
+              name="account-edit-outline"
+              size={22}
+              color={Colors.primary}
+            />
+            <Text type="defaultBold" color="primary" style={{ fontSize: 16 }}>
+              Editar Datos del Perfil
+            </Text>
+          </View>
+          <MaterialCommunityIcons
+            name={showProfileForm ? "chevron-up" : "chevron-down"}
+            size={24}
+            color="#64748B"
+          />
+        </Pressable>
+
+        {showProfileForm && (
+          <View style={styles.formContainer}>
+            <Text style={styles.formInstructions}>
+              Actualiza tu nombre completo para mostrarlo en tu cuenta.
+            </Text>
+
+            {profileSuccessMsg && (
+              <View style={styles.successBanner}>
+                <MaterialCommunityIcons name="check-circle" size={18} color="#16A34A" />
+                <Text style={styles.successText}>{profileSuccessMsg}</Text>
+              </View>
+            )}
+
+            {profileErrorMsg && (
+              <View style={styles.errorBanner}>
+                <MaterialCommunityIcons name="alert-circle" size={18} color={Colors.secondary} />
+                <Text style={styles.errorText}>{profileErrorMsg}</Text>
+              </View>
+            )}
+
+            <View style={styles.fieldGap}>
+              <View>
+                <Text style={styles.fieldLabel}>NOMBRE COMPLETO</Text>
+                <TextInputController
+                  name="name"
+                  control={profileControl}
+                  errors={profileErrors}
+                  rules={{
+                    required: "El nombre es obligatorio",
+                    minLength: {
+                      value: 6,
+                      message: "El nombre debe tener al menos 6 caracteres",
+                    },
+                  }}
+                  inputProps={{
+                    placeholder: "Tu nombre completo",
+                    leftIcon: "account-outline",
+                  }}
+                />
+              </View>
+
+              <View style={{ marginTop: 8 }}>
+                {isLoadingProfile ? (
+                  <ActivityIndicator size="large" color={Colors.secondary} />
+                ) : (
+                  <Button
+                    title="GUARDAR NOMBRE"
+                    onPress={handleProfileSubmit(onUpdateProfile)}
+                    color="primary"
+                  />
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+      </View>
+
+      {/* 4. SECCIÓN DE CAMBIO DE CONTRASEÑA */}
       <View style={styles.card}>
         <Pressable
           onPress={() => setShowPasswordForm(!showPasswordForm)}
@@ -208,25 +443,17 @@ export default function Profile() {
               Ingresa tu contraseña actual y define tu nueva contraseña.
             </Text>
 
-            {successMsg && (
+            {passwordSuccessMsg && (
               <View style={styles.successBanner}>
-                <MaterialCommunityIcons
-                  name="check-circle"
-                  size={18}
-                  color="#16A34A"
-                />
-                <Text style={styles.successText}>{successMsg}</Text>
+                <MaterialCommunityIcons name="check-circle" size={18} color="#16A34A" />
+                <Text style={styles.successText}>{passwordSuccessMsg}</Text>
               </View>
             )}
 
-            {errorMsg && (
+            {passwordErrorMsg && (
               <View style={styles.errorBanner}>
-                <MaterialCommunityIcons
-                  name="alert-circle"
-                  size={18}
-                  color={Colors.secondary}
-                />
-                <Text style={styles.errorText}>{errorMsg}</Text>
+                <MaterialCommunityIcons name="alert-circle" size={18} color={Colors.secondary} />
+                <Text style={styles.errorText}>{passwordErrorMsg}</Text>
               </View>
             )}
 
@@ -235,8 +462,8 @@ export default function Profile() {
                 <Text style={styles.fieldLabel}>CONTRASEÑA ACTUAL</Text>
                 <TextInputController
                   name="currentPassword"
-                  control={control}
-                  errors={errors}
+                  control={passwordControl}
+                  errors={passwordErrors}
                   rules={{
                     required: "Ingresa tu contraseña actual",
                     minLength: {
@@ -257,8 +484,8 @@ export default function Profile() {
                 <Text style={styles.fieldLabel}>NUEVA CONTRASEÑA</Text>
                 <TextInputController
                   name="password"
-                  control={control}
-                  errors={errors}
+                  control={passwordControl}
+                  errors={passwordErrors}
                   rules={{
                     required: "Ingresa la nueva contraseña",
                     minLength: {
@@ -279,8 +506,8 @@ export default function Profile() {
                 <Text style={styles.fieldLabel}>CONFIRMAR NUEVA CONTRASEÑA</Text>
                 <TextInputController
                   name="passwordConfirmation"
-                  control={control}
-                  errors={errors}
+                  control={passwordControl}
+                  errors={passwordErrors}
                   rules={{
                     required: "Confirma la nueva contraseña",
                     validate: (value) =>
@@ -297,12 +524,12 @@ export default function Profile() {
               </View>
 
               <View style={{ marginTop: 8 }}>
-                {isLoading ? (
+                {isLoadingPassword ? (
                   <ActivityIndicator size="large" color={Colors.secondary} />
                 ) : (
                   <Button
                     title="ACTUALIZAR CONTRASEÑA"
-                    onPress={handleSubmit(onChangePassword)}
+                    onPress={handlePasswordSubmit(onChangePassword)}
                     color="secondary"
                   />
                 )}
@@ -312,7 +539,7 @@ export default function Profile() {
         )}
       </View>
 
-      {/* 4. BOTÓN CERRAR SESIÓN */}
+      {/* 5. BOTÓN CERRAR SESIÓN */}
       <View style={styles.logoutContainer}>
         <Button
           title="CERRAR SESIÓN"
@@ -338,8 +565,35 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     marginTop: 10,
   },
-  avatarContainer: {
-    marginBottom: 12,
+  avatarWrapper: {
+    position: "relative",
+    marginBottom: 14,
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  cameraBadgeBtn: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: Colors.secondary,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   userName: {
     fontSize: 22,
@@ -388,7 +642,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#E2E8F0",
-    marginBottom: 24,
+    marginBottom: 18,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -465,6 +719,7 @@ const styles = StyleSheet.create({
   },
   logoutContainer: {
     width: "100%",
+    marginTop: 10,
   },
 });
 

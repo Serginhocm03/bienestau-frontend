@@ -54,6 +54,7 @@ export type Person = {
 
 export type User = {
   name?: string;
+  avatar?: Media;
   blocked: boolean;
   confirmed: boolean;
   createdAt: string;
