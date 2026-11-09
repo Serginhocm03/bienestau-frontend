@@ -67,7 +67,14 @@ export function isVideoMedia(url: string | undefined | null): boolean {
  */
 export function buildUrl(key: string, populate: boolean = true) {
   const baseUrl = `${env.API}/${key}`;
-  // pLevel es para carga profunda de componentes dinámicos.
-  // Para listas simples, Strapi v5 necesita al menos ?populate=* para ver imágenes.
-  return populate ? `${baseUrl}?pLevel` : baseUrl;
+  if (!populate) return baseUrl;
+
+  // Para listas simples (noticias, eventos, avisos), usar populate=* para respuesta ultrarrápida
+  const simpleKeys = ['news', 'events', 'reminders', 'notification-tokens', 'users'];
+  if (simpleKeys.some((k) => key.startsWith(k))) {
+    return `${baseUrl}?populate=*`;
+  }
+
+  // pLevel es para páginas con zonas dinámicas complejas (home, welfare, action-lines)
+  return `${baseUrl}?pLevel`;
 }

@@ -17,7 +17,10 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // Cache de 5 minutos
+      staleTime: 1000 * 60 * 10, // 10 minutos de cache activo
+      gcTime: 1000 * 60 * 60 * 24, // 24 horas en memoria local
+      refetchOnWindowFocus: false,
+      retry: 2,
     },
   },
 });
