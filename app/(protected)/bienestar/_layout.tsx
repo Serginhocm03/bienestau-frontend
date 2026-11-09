@@ -4,6 +4,7 @@ import { StyleSheet, Image, View } from "react-native";
 import { Colors } from "@/constants/bienestar/colors";
 import { Text } from "@/components/bienestar/primitives/Text";
 import * as Notifications from 'expo-notifications';
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 /**
  * TabLayout con Imágenes Personalizadas e Indicador de Avisos
@@ -91,6 +92,19 @@ export default function TabLayout() {
                 </View>
               )}
             </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="lost-and-found"
+        options={{
+          title: "Perdidos",
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons
+              name="archive-search-outline"
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
