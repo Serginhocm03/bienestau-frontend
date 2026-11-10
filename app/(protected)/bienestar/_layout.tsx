@@ -76,25 +76,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="reminders"
+        name="cart"
         options={{
-          title: "Avisos",
+          title: "Carrito",
           tabBarIcon: ({ color }) => (
-            <View>
-              <Image
-                source={require("@/assets/images/Recordatorios.png")}
-                style={[styles.icon, { tintColor: color }]}
-                resizeMode="contain"
-              />
-              {unreadCount > 0 && (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{unreadCount}</Text>
-                </View>
-              )}
-            </View>
+            <MaterialCommunityIcons
+              name="cart-outline"
+              size={24}
+              color={color}
+            />
           ),
         }}
       />
+      <Tabs.Screen name="reminders" options={{ href: null }} />
       <Tabs.Screen
         name="lost-and-found"
         options={{

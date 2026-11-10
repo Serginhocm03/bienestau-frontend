@@ -1,36 +1,29 @@
 import React from "react";
-import { View, StyleSheet, Pressable, Alert } from "react-native";
+import { View, StyleSheet, Pressable } from "react-native";
 import { Text } from "@/components/bienestar/primitives/Text";
 import { Colors } from "@/constants/bienestar/colors";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 export type TabType = "noticias" | "eventos";
 
 export interface TopTabsProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
-  cartCount?: number;
-  onCartPress?: () => void;
+  unreadCount?: number;
 }
 
 export function TopTabs({
   activeTab,
   onTabChange,
-  cartCount = 0,
-  onCartPress,
+  unreadCount = 0,
 }: TopTabsProps) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
-  const handleCartClick = () => {
-    if (onCartPress) {
-      onCartPress();
-    } else {
-      Alert.alert(
-        "🛒 Carrito de Compras",
-        "Módulo de prueba visual. Próximamente podrás adquirir artículos y servicios de Bienestar Institucional aquí."
-      );
-    }
+  const handleRemindersClick = () => {
+    router.push("/(protected)/bienestar/reminders");
   };
 
   return (
@@ -63,12 +56,14 @@ export function TopTabs({
         </Pressable>
       </View>
 
-      {/* BOTÓN DEL CARRITO DE COMPRAS EN LA ESQUINA SUPERIOR DERECHA */}
-      <Pressable onPress={handleCartClick} style={styles.cartBtn}>
-        <MaterialCommunityIcons name="cart-outline" size={24} color={Colors.primary} />
-        <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>{cartCount}</Text>
-        </View>
+      {/* BOTÓN DE AVISOS EN LA ESQUINA SUPERIOR DERECHA */}
+      <Pressable onPress={handleRemindersClick} style={styles.bellBtn}>
+        <MaterialCommunityIcons name="bell-ring-outline" size={24} color={Colors.primary} />
+        {unreadCount > 0 && (
+          <View style={styles.bellBadge}>
+            <Text style={styles.bellBadgeText}>{unreadCount}</Text>
+          </View>
+        )}
       </Pressable>
     </View>
   );
@@ -100,14 +95,14 @@ const styles = StyleSheet.create({
   activeText: {
     fontWeight: "bold",
   },
-  cartBtn: {
+  bellBtn: {
     padding: 8,
     position: "relative",
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
   },
-  cartBadge: {
+  bellBadge: {
     position: "absolute",
     top: 2,
     right: 2,
@@ -120,7 +115,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#FFFFFF",
   },
-  cartBadgeText: {
+  bellBadgeText: {
     color: "#FFFFFF",
     fontSize: 10,
     fontWeight: "900",
