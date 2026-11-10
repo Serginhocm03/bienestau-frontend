@@ -16,6 +16,7 @@ import { SectionHeader } from "@/components/bienestar/sections/SectionHeader";
 import { EventCard } from "@/components/bienestar/sections/EventCard";
 import { TopTabs, TabType } from "@/components/bienestar/sections/TopTabs";
 import { DetailModal } from "@/components/bienestar/sections/DetailModal";
+import { ReelsSection } from "@/components/bienestar/sections/ReelsSection";
 import React, { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
@@ -237,6 +238,9 @@ export default function Home() {
               )}
             </View>
           )}
+
+          {/* REELS Y MOMENTOS CAMPUS (ESTILO TIKTOK / INSTAGRAM REELS) */}
+          <ReelsSection />
 
           {/* DYNAMIC SECTIONS */}
           <DynamicSections content={home.content} />
