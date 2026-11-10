@@ -157,7 +157,11 @@ export default function Home() {
         )
       }
     >
-      <TopTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <TopTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        unreadCount={filteredReminder ? 1 : 0}
+      />
 
       {isPending ? (
         <ActivityIndicator size="large" color={Colors.secondary} style={{ marginTop: 50 }} />
