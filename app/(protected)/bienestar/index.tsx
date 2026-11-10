@@ -216,8 +216,11 @@ export default function Home() {
                   </View>
                 )}
               </View>
+
+              {/* REELS Y MOMENTOS CAMPUS */}
+              <ReelsSection />
             </>
-          ) : (
+          ) : activeTab === "eventos" ? (
             <View style={styles.section}>
               <SectionHeader title="EVENTOS" />
               {events && events.length > 0 ? (
@@ -237,10 +240,10 @@ export default function Home() {
                 </View>
               )}
             </View>
+          ) : (
+            /* PESTAÑA DEDICADA A REELS */
+            <ReelsSection />
           )}
-
-          {/* REELS Y MOMENTOS CAMPUS (ESTILO TIKTOK / INSTAGRAM REELS) */}
-          <ReelsSection />
 
           {/* DYNAMIC SECTIONS */}
           <DynamicSections content={home.content} />

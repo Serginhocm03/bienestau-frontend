@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-export type TabType = "noticias" | "eventos";
+export type TabType = "noticias" | "eventos" | "reels";
 
 export interface TopTabsProps {
   activeTab: TabType;
@@ -52,6 +52,19 @@ export function TopTabs({
             style={activeTab === "eventos" && styles.activeText}
           >
             EVENTOS
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => onTabChange("reels")}
+          style={[styles.tab, activeTab === "reels" && styles.activeTab]}
+        >
+          <Text
+            type="tab"
+            color={activeTab === "reels" ? "primary" : "gray"}
+            style={activeTab === "reels" && styles.activeText}
+          >
+            REELS 🎬
           </Text>
         </Pressable>
       </View>
