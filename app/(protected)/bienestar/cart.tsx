@@ -4,307 +4,813 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  Image,
+  TextInput,
+  Modal,
   Alert,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { Text } from "@/components/bienestar/primitives/Text";
 import { Colors } from "@/constants/bienestar/colors";
 import { ScrollViewLayout } from "@/components/bienestar/layout/ScrollViewLayout";
 
-interface CartItem {
+export interface Product {
   id: string;
   title: string;
-  category: string;
+  category: "Indumentaria" | "Eventos" | "Accesorios" | "Papelería";
   price: number;
-  quantity: number;
+  originalPrice: number;
+  discount: string;
+  rating: string;
+  salesCount: number;
+  badge?: string;
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-const INITIAL_CART: CartItem[] = [
+const TEMU_PRODUCTS: Product[] = [
   {
     id: "1",
-    title: "Chaqueta Institucional Unicesmag",
+    title: "Buzo Hoodie Capuchino Unicesmag",
     category: "Indumentaria",
-    price: 85000,
-    quantity: 1,
+    price: 61750,
+    originalPrice: 95000,
+    discount: "-35%",
+    rating: "4.9",
+    salesCount: 240,
+    badge: "🔥 MÁS VENDIDO",
     icon: "tshirt-crew-outline",
   },
   {
     id: "2",
-    title: "Termo Ecológico Capuchino 750ml",
+    title: "Termo Metálico Ecológico 750ml",
     category: "Accesorios",
-    price: 28000,
-    quantity: 1,
+    price: 28500,
+    originalPrice: 38000,
+    discount: "-25%",
+    rating: "4.8",
+    salesCount: 115,
+    badge: "⚡ RELÁMPAGO",
     icon: "bottle-soda-outline",
   },
   {
     id: "3",
-    title: "Entrada Conferencia Liderazgo",
+    title: "Boleta Conferencia Liderazgo 2026",
     category: "Eventos",
     price: 15000,
-    quantity: 2,
+    originalPrice: 30000,
+    discount: "-50%",
+    rating: "4.9",
+    salesCount: 310,
+    badge: "🎟️ EVENTO",
     icon: "ticket-confirmation-outline",
+  },
+  {
+    id: "4",
+    title: "Gorra Institucional Bordada Premium",
+    category: "Indumentaria",
+    price: 21000,
+    originalPrice: 35000,
+    discount: "-40%",
+    rating: "5.0",
+    salesCount: 89,
+    badge: "🌟 RECOMENDADO",
+    icon: "hat-fedora",
+  },
+  {
+    id: "5",
+    title: "Cuaderno Pasta Dura Capuchino",
+    category: "Papelería",
+    price: 14400,
+    originalPrice: 18000,
+    discount: "-20%",
+    rating: "4.7",
+    salesCount: 74,
+    icon: "notebook-outline",
+  },
+  {
+    id: "6",
+    title: "Mochila Ergonomica Unicesmag Pro",
+    category: "Accesorios",
+    price: 84000,
+    originalPrice: 120000,
+    discount: "-30%",
+    rating: "4.9",
+    salesCount: 152,
+    badge: "🎒 EDICIÓN LIMITADA",
+    icon: "bag-personal-outline",
   },
 ];
 
-export default function Cart() {
-  const insets = useSafeAreaInsets();
-  const [items, setItems] = useState<CartItem[]>(INITIAL_CART);
+type CategoryFilter = "Todo" | "Indumentaria" | "Eventos" | "Accesorios" | "Papelería";
 
-  const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean) as CartItem[]
-    );
+export default function CartCatalog() {
+  const insets = useSafeAreaInsets();
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>("Todo");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [cart, setCart] = useState<{ [productId: string]: number }>({
+    "1": 1,
+    "2": 1,
+  });
+  const [isCartModalVisible, setIsCartModalVisible] = useState(false);
+
+  const categories: CategoryFilter[] = [
+    "Todo",
+    "Indumentaria",
+    "Eventos",
+    "Accesorios",
+    "Papelería",
+  ];
+
+  const addToCart = (productId: string) => {
+    setCart((prev) => ({
+      ...prev,
+      [productId]: (prev[productId] || 0) + 1,
+    }));
   };
 
-  const totalPrice = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
+  const updateQuantity = (productId: string, delta: number) => {
+    setCart((prev) => {
+      const current = prev[productId] || 0;
+      const next = current + delta;
+      const updated = { ...prev };
+      if (next > 0) {
+        updated[productId] = next;
+      } else {
+        delete updated[productId];
+      }
+      return updated;
+    });
+  };
+
+  const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
+  const totalCartPrice = Object.entries(cart).reduce((sum, [pId, qty]) => {
+    const prod = TEMU_PRODUCTS.find((p) => p.id === pId);
+    return sum + (prod ? prod.price * qty : 0);
+  }, 0);
+
+  const filteredProducts = TEMU_PRODUCTS.filter((prod) => {
+    const matchesCategory =
+      selectedCategory === "Todo" || prod.category === selectedCategory;
+    const matchesSearch = prod.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const handleCheckout = () => {
     Alert.alert(
-      "🛒 Módulo en Desarrollo",
-      `El carrito de compras de Bienestar Institucional estará disponible muy pronto para procesar pagos de servicios y artículos universitarios.\n\nTotal estimado: $${totalPrice.toLocaleString("es-CO")}`,
-      [{ text: "Entendido", style: "default" }]
+      "🛒 Módulo de Prueba Temu-Style",
+      `¡Simulación de compra completada!\n\nArtículos: ${totalCartItems}\nTotal: $${totalCartPrice.toLocaleString("es-CO")}\n\nPróximamente podrás realizar pedidos reales y recibirlos en el campus.`,
+      [{ text: "¡Genial!", style: "default" }]
     );
   };
 
   return (
     <ScrollViewLayout
-      header={{ title: "CARRITO DE COMPRAS" }}
+      header={{ title: "TIENDA BIENESTAU" }}
       layout={{ height: 100, minHeight: 100 }}
       stickyImage={false}
     >
       <View
         style={[
           styles.container,
-          { paddingBottom: Math.max(40, insets.bottom + 20) },
+          { paddingBottom: Math.max(80, insets.bottom + 70) },
         ]}
       >
-        {/* BANNER INFORMATIVO */}
-        <View style={styles.infoBanner}>
-          <MaterialCommunityIcons
-            name="store-outline"
-            size={24}
-            color={Colors.primary}
-          />
-          <View style={styles.infoBannerTextContainer}>
-            <Text type="defaultBold" color="primary" style={{ fontSize: 14 }}>
-              Tienda y Servicios BienestAU
-            </Text>
-            <Text color="gray" style={{ fontSize: 12, lineHeight: 17 }}>
-              Módulo de prueba visual. Adquiere indumentaria, tiquetes a eventos
-              y artículos institucionales.
-            </Text>
+        {/* 1. HERO BANNER ESTILO TEMU FLASH SALE */}
+        <LinearGradient
+          colors={["#FF5000", "#FF8A00"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroBanner}
+        >
+          <View style={styles.heroHeaderRow}>
+            <View style={styles.flashBadge}>
+              <MaterialCommunityIcons name="lightning-bolt" size={16} color="#FF5000" />
+              <Text style={styles.flashBadgeText}>OFERTAS RELÁMPAGO 24H</Text>
+            </View>
+            <Text style={styles.timerText}>⏱️ 04:32:15</Text>
           </View>
-        </View>
 
-        {/* LISTA DE ÍTEMS EN EL CARRITO */}
-        <View style={styles.section}>
-          <Text type="defaultBold" color="primary" style={styles.sectionTitle}>
-            ARTÍCULOS EN EL CARRITO ({items.length})
+          <Text style={styles.heroTitle}>🔥 MEGA DESCUENTOS CAMPUS</Text>
+          <Text style={styles.heroSubtitle}>
+            Hasta 50% OFF en productos institucionales, ropa y tiquetes a eventos
           </Text>
 
-          {items.length > 0 ? (
-            items.map((item) => (
-              <View key={item.id} style={styles.itemCard}>
-                <View style={styles.itemIconCircle}>
-                  <MaterialCommunityIcons
-                    name={item.icon}
-                    size={24}
-                    color={Colors.primary}
-                  />
+          <View style={styles.perksRow}>
+            <View style={styles.perkChip}>
+              <Text style={styles.perkText}>🚚 Envío Gratis Campus</Text>
+            </View>
+            <View style={styles.perkChip}>
+              <Text style={styles.perkText}>💯 100% Original</Text>
+            </View>
+            <View style={styles.perkChip}>
+              <Text style={styles.perkText}>🛡️ Garantía Unicesmag</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* 2. BUSCADOR TEMU */}
+        <View style={styles.searchBox}>
+          <MaterialCommunityIcons name="magnify" size={22} color="#FF5000" />
+          <TextInput
+            placeholder="Buscar buzos, termos, gorras, tiquetes..."
+            placeholderTextColor="#94A3B8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.searchInput}
+          />
+          {searchQuery ? (
+            <Pressable onPress={() => setSearchQuery("")}>
+              <MaterialCommunityIcons name="close-circle" size={18} color="#94A3B8" />
+            </Pressable>
+          ) : null}
+        </View>
+
+        {/* 3. FILTROS CHIPS */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScroll}
+        >
+          {categories.map((cat) => (
+            <Pressable
+              key={cat}
+              onPress={() => setSelectedCategory(cat)}
+              style={[
+                styles.categoryChip,
+                selectedCategory === cat && styles.categoryChipActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  selectedCategory === cat && styles.categoryTextActive,
+                ]}
+              >
+                {cat}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* 4. Malla 2-Columnas de Productos Temu */}
+        <View style={styles.productGrid}>
+          {filteredProducts.map((prod) => {
+            const inCartQty = cart[prod.id] || 0;
+
+            return (
+              <View key={prod.id} style={styles.productCard}>
+                {/* Imagen & Badge */}
+                <View style={styles.productImageContainer}>
+                  <View style={styles.productIconCircle}>
+                    <MaterialCommunityIcons
+                      name={prod.icon}
+                      size={44}
+                      color="#FF5000"
+                    />
+                  </View>
+
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountBadgeText}>{prod.discount}</Text>
+                  </View>
+
+                  {prod.badge && (
+                    <View style={styles.tagBadge}>
+                      <Text style={styles.tagBadgeText}>{prod.badge}</Text>
+                    </View>
+                  )}
                 </View>
 
-                <View style={styles.itemContent}>
-                  <Text
-                    type="defaultBold"
-                    color="primary"
-                    style={styles.itemTitle}
-                  >
-                    {item.title}
+                {/* Info */}
+                <View style={styles.productContent}>
+                  <Text style={styles.productTitle} numberOfLines={2}>
+                    {prod.title}
                   </Text>
-                  <Text style={styles.itemCategory}>{item.category}</Text>
-                  <Text style={styles.itemPrice}>
-                    ${(item.price * item.quantity).toLocaleString("es-CO")}
-                  </Text>
-                </View>
 
-                {/* CONTROLES DE CANTIDAD */}
-                <View style={styles.quantityControls}>
+                  <View style={styles.ratingRow}>
+                    <Text style={styles.ratingText}>⭐ {prod.rating}</Text>
+                    <Text style={styles.salesText}>({prod.salesCount} vtas)</Text>
+                  </View>
+
+                  {/* Precios */}
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceText}>
+                      ${prod.price.toLocaleString("es-CO")}
+                    </Text>
+                    <Text style={styles.originalPriceText}>
+                      ${prod.originalPrice.toLocaleString("es-CO")}
+                    </Text>
+                  </View>
+
+                  <View style={styles.freeShippingRow}>
+                    <Text style={styles.freeShippingText}>🚚 Envío Gratis</Text>
+                  </View>
+
+                  {/* Botón Agregar */}
                   <Pressable
-                    onPress={() => updateQuantity(item.id, -1)}
-                    style={styles.qtyBtn}
+                    onPress={() => addToCart(prod.id)}
+                    style={styles.addCartBtn}
                   >
-                    <MaterialCommunityIcons name="minus" size={16} color="#64748B" />
-                  </Pressable>
-                  <Text style={styles.qtyText}>{item.quantity}</Text>
-                  <Pressable
-                    onPress={() => updateQuantity(item.id, 1)}
-                    style={styles.qtyBtn}
-                  >
-                    <MaterialCommunityIcons name="plus" size={16} color="#64748B" />
+                    <MaterialCommunityIcons
+                      name="cart-plus"
+                      size={18}
+                      color="white"
+                    />
+                    <Text style={styles.addCartBtnText}>
+                      {inCartQty > 0 ? `AGREGAR (${inCartQty})` : "AGREGAR"}
+                    </Text>
                   </Pressable>
                 </View>
               </View>
-            ))
-          ) : (
-            <View style={styles.emptyBox}>
-              <MaterialCommunityIcons
-                name="cart-remove"
-                size={48}
-                color="#CBD5E1"
-              />
-              <Text color="gray" style={{ marginTop: 10, textAlign: "center" }}>
-                Tu carrito está vacío por ahora.
-              </Text>
-            </View>
-          )}
+            );
+          })}
         </View>
-
-        {/* RESUMEN Y BOTÓN DE PAGO */}
-        {items.length > 0 && (
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
-              <Text color="gray" style={{ fontSize: 14 }}>
-                Subtotal
-              </Text>
-              <Text color="primary" style={{ fontSize: 14, fontWeight: "700" }}>
-                ${totalPrice.toLocaleString("es-CO")}
-              </Text>
-            </View>
-
-            <View style={styles.summaryRow}>
-              <Text color="gray" style={{ fontSize: 14 }}>
-                Envío / Retiro en Campus
-              </Text>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#16A34A" }}>
-                GRATIS
-              </Text>
-            </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.summaryRow}>
-              <Text
-                type="defaultBold"
-                color="primary"
-                style={{ fontSize: 16 }}
-              >
-                TOTAL ESTIMADO
-              </Text>
-              <Text
-                type="defaultBold"
-                style={{ fontSize: 18, color: Colors.secondary }}
-              >
-                ${totalPrice.toLocaleString("es-CO")}
-              </Text>
-            </View>
-
-            <Pressable onPress={handleCheckout} style={styles.checkoutBtn}>
-              <MaterialCommunityIcons name="credit-card-outline" size={20} color="white" />
-              <Text style={styles.checkoutBtnText}>FINALIZAR COMPRA (PRÓXIMAMENTE)</Text>
-            </Pressable>
-          </View>
-        )}
       </View>
+
+      {/* 5. BARRA FLOTANTE INFERIOR ESTILO TEMU */}
+      {totalCartItems > 0 && (
+        <View style={[styles.floatingCartBar, { bottom: Math.max(10, insets.bottom + 5) }]}>
+          <View style={styles.floatingCartLeft}>
+            <View style={styles.floatingCartIconBox}>
+              <MaterialCommunityIcons name="cart" size={24} color="#FF5000" />
+              <View style={styles.floatingBadge}>
+                <Text style={styles.floatingBadgeText}>{totalCartItems}</Text>
+              </View>
+            </View>
+            <View>
+              <Text style={styles.floatingTotalLabel}>Total a Pagar:</Text>
+              <Text style={styles.floatingTotalPrice}>
+                ${totalCartPrice.toLocaleString("es-CO")}
+              </Text>
+            </View>
+          </View>
+
+          <Pressable
+            onPress={() => setIsCartModalVisible(true)}
+            style={styles.floatingCheckoutBtn}
+          >
+            <Text style={styles.floatingCheckoutBtnText}>
+              VER CARRITO ({totalCartItems})
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={20} color="white" />
+          </Pressable>
+        </View>
+      )}
+
+      {/* MODAL DE RESUMEN DEL CARRITO TEMU */}
+      <Modal
+        visible={isCartModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsCartModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <MaterialCommunityIcons name="cart" size={22} color="#FF5000" />
+                <Text type="defaultBold" style={{ fontSize: 18, color: "#0F172A" }}>
+                  Tu Carrito Temu-Style ({totalCartItems})
+                </Text>
+              </View>
+              <Pressable onPress={() => setIsCartModalVisible(false)}>
+                <MaterialCommunityIcons name="close" size={24} color="#64748B" />
+              </Pressable>
+            </View>
+
+            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={true}>
+              {Object.entries(cart).map(([pId, qty]) => {
+                const prod = TEMU_PRODUCTS.find((p) => p.id === pId);
+                if (!prod) return null;
+
+                return (
+                  <View key={pId} style={styles.modalItemRow}>
+                    <View style={styles.modalItemIconCircle}>
+                      <MaterialCommunityIcons
+                        name={prod.icon}
+                        size={22}
+                        color="#FF5000"
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: "800", fontSize: 13, color: "#0F172A" }}>
+                        {prod.title}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: "#FF5000", fontWeight: "800" }}>
+                        ${(prod.price * qty).toLocaleString("es-CO")}
+                      </Text>
+                    </View>
+
+                    <View style={styles.qtyControlsModal}>
+                      <Pressable
+                        onPress={() => updateQuantity(pId, -1)}
+                        style={styles.modalQtyBtn}
+                      >
+                        <MaterialCommunityIcons name="minus" size={14} color="#64748B" />
+                      </Pressable>
+                      <Text style={{ fontWeight: "800", fontSize: 13 }}>{qty}</Text>
+                      <Pressable
+                        onPress={() => updateQuantity(pId, 1)}
+                        style={styles.modalQtyBtn}
+                      >
+                        <MaterialCommunityIcons name="plus" size={14} color="#64748B" />
+                      </Pressable>
+                    </View>
+                  </View>
+                );
+              })}
+            </ScrollView>
+
+            <View style={styles.modalSummaryFooter}>
+              <View style={styles.modalTotalRow}>
+                <Text style={{ fontSize: 14, color: "#64748B" }}>Total Estimado:</Text>
+                <Text style={{ fontSize: 20, fontWeight: "900", color: "#FF5000" }}>
+                  ${totalCartPrice.toLocaleString("es-CO")}
+                </Text>
+              </View>
+
+              <Pressable onPress={handleCheckout} style={styles.modalCheckoutBtn}>
+                <Text style={styles.modalCheckoutBtnText}>
+                  COMPRAR AHORA CON GARANTÍA
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollViewLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 14,
   },
-  infoBanner: {
+  heroBanner: {
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#FF5000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  heroHeaderRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#EFF6FF",
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#BFDBFE",
-    gap: 12,
-    marginBottom: 16,
+    marginBottom: 10,
   },
-  infoBannerTextContainer: {
-    flex: 1,
-  },
-  section: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    letterSpacing: 0.8,
-    marginBottom: 14,
-  },
-  itemCard: {
+  flashBadge: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    marginBottom: 12,
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
   },
-  itemIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#EFF6FF",
+  flashBadgeText: {
+    color: "#FF5000",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  timerText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+    backgroundColor: "rgba(0,0,0,0.25)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  heroTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "900",
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  heroSubtitle: {
+    color: "rgba(255,255,255,0.95)",
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  perksRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  perkChip: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  perkText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#FFD0B3",
+    marginBottom: 14,
+    gap: 8,
+    elevation: 2,
+    shadowColor: "#FF5000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    color: "#0F172A",
+  },
+  categoryScroll: {
+    gap: 8,
+    paddingBottom: 6,
+    marginBottom: 14,
+  },
+  categoryChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  categoryChipActive: {
+    backgroundColor: "#FF5000",
+    borderColor: "#FF5000",
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#64748B",
+  },
+  categoryTextActive: {
+    color: "#FFFFFF",
+  },
+  productGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginHorizontal: -6,
+  },
+  productCard: {
+    width: "50%",
+    paddingHorizontal: 6,
+    marginBottom: 14,
+  },
+  productImageContainer: {
+    height: 130,
+    backgroundColor: "#FFF5F0",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#FFE4D6",
+  },
+  productIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 3,
+  },
+  discountBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "#FF5000",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  discountBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  tagBadge: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  tagBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "800",
+  },
+  productContent: {
+    backgroundColor: "#FFFFFF",
+    padding: 10,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: "#F1F5F9",
+    gap: 4,
+  },
+  productTitle: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#0F172A",
+    lineHeight: 17,
+    height: 34,
+  },
+  ratingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#D97706",
+  },
+  salesText: {
+    fontSize: 10,
+    color: "#94A3B8",
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+    marginTop: 2,
+  },
+  priceText: {
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#FF5000",
+  },
+  originalPriceText: {
+    fontSize: 11,
+    color: "#94A3B8",
+    textDecorationLine: "line-through",
+  },
+  freeShippingRow: {
+    marginTop: 2,
+  },
+  freeShippingText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#16A34A",
+  },
+  addCartBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF5000",
+    paddingVertical: 8,
+    borderRadius: 10,
+    gap: 6,
+    marginTop: 6,
+  },
+  addCartBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  floatingCartBar: {
+    position: "absolute",
+    left: 14,
+    right: 14,
+    backgroundColor: "#0F172A",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  floatingCartLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  floatingCartIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  floatingBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: "#FF5000",
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: "center",
     alignItems: "center",
   },
-  itemContent: {
-    flex: 1,
+  floatingBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "900",
   },
-  itemTitle: {
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  itemCategory: {
+  floatingTotalLabel: {
+    color: "#94A3B8",
     fontSize: 11,
-    color: "#64748B",
-    marginBottom: 4,
   },
-  itemPrice: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: Colors.secondary,
+  floatingTotalPrice: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
   },
-  quantityControls: {
+  floatingCheckoutBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    padding: 4,
-    gap: 8,
+    backgroundColor: "#FF5000",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    gap: 4,
   },
-  qtyBtn: {
-    width: 28,
-    height: 28,
+  floatingCheckoutBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingBottom: 30,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F5F9",
+  },
+  modalItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F8FAFC",
+  },
+  modalItemIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFF5F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  qtyControlsModal: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#F8FAFC",
+    padding: 4,
+    borderRadius: 8,
+  },
+  modalQtyBtn: {
+    width: 24,
+    height: 24,
     borderRadius: 6,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
@@ -312,54 +818,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
   },
-  qtyText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: "#0F172A",
-    minWidth: 16,
-    textAlign: "center",
-  },
-  emptyBox: {
-    padding: 30,
-    alignItems: "center",
-  },
-  summaryCard: {
-    backgroundColor: "#FFFFFF",
-    padding: 18,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
+  modalSummaryFooter: {
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E8F0",
     gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
   },
-  summaryRow: {
+  modalTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  divider: {
-    height: 1,
-    backgroundColor: "#F1F5F9",
-    marginVertical: 4,
-  },
-  checkoutBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: Colors.secondary,
+  modalCheckoutBtn: {
+    backgroundColor: "#FF5000",
     paddingVertical: 14,
     borderRadius: 14,
-    marginTop: 8,
+    alignItems: "center",
   },
-  checkoutBtnText: {
+  modalCheckoutBtnText: {
     color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: 14,
+    fontWeight: "900",
     letterSpacing: 0.5,
   },
 });
