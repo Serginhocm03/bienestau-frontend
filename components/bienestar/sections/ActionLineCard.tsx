@@ -14,14 +14,14 @@ export interface ActionLineCardProps {
   isFeatured?: boolean;
 }
 
-export function ActionLineCard({ item, onPress, style, isFeatured = false }: ActionLineCardProps) {
+export function ActionLineCard({ item, onPress, style }: ActionLineCardProps) {
   const localBanner = getLocalBanner(item.header.title);
   const hasImage = !!item.header.image || !!localBanner;
   const symbol = getEmojiSymbol(item.header.title);
 
   return (
-    <Pressable onPress={onPress} style={[styles.container, isFeatured && styles.featuredContainer, style]}>
-      <View style={[styles.imageWrapper, isFeatured && styles.featuredImageWrapper]}>
+    <Pressable onPress={onPress} style={[styles.container, style]}>
+      <View style={styles.imageWrapper}>
         {hasImage ? (
           <Image
             source={localBanner ? localBanner : { uri: buildMediaUrl(item.header.image?.url) }}
@@ -40,11 +40,11 @@ export function ActionLineCard({ item, onPress, style, isFeatured = false }: Act
           style={styles.gradient}
         >
           <View style={styles.textContainer}>
-            <View style={[styles.iconCircle, isFeatured && styles.featuredIconCircle]}>
+            <View style={styles.iconCircle}>
                 {/* Símbolos universales del sistema (Emojis) */}
-                <Text style={[styles.emojiIcon, isFeatured && { fontSize: 26 }]}>{symbol}</Text>
+                <Text style={styles.emojiIcon}>{symbol}</Text>
             </View>
-            <Text style={[styles.title, isFeatured && styles.featuredTitle]} color="white">
+            <Text style={styles.title} color="white">
               {item.header.title.toUpperCase()}
             </Text>
           </View>
@@ -86,17 +86,10 @@ const styles = StyleSheet.create({
     elevation: 6,
     overflow: 'hidden',
   },
-  featuredContainer: {
-    borderRadius: 20,
-    marginBottom: 12,
-  },
   imageWrapper: {
     width: "100%",
     aspectRatio: 1.65,
     position: "relative",
-  },
-  featuredImageWrapper: {
-    aspectRatio: 2.5,
   },
   image: {
     width: "100%",
@@ -131,11 +124,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.6)',
   },
-  featuredIconCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-  },
   emojiIcon: {
     fontSize: 18,
   },
@@ -149,9 +137,5 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 6,
     flexShrink: 1,
-  },
-  featuredTitle: {
-    fontSize: 14,
-    letterSpacing: 0.6,
   },
 });
