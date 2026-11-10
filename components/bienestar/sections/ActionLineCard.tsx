@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 0.3,
     color: 'white',
+    textAlign: 'center',
     textShadowColor: 'black',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 6,

@@ -247,6 +247,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     paddingHorizontal: 10,
+    justifyContent: "center",
   },
   gridItem: {
     width: "50%",
