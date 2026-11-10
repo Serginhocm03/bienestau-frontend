@@ -29,7 +29,7 @@ export interface Product {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-const TEMU_PRODUCTS: Product[] = [
+const INSTITUTIONAL_PRODUCTS: Product[] = [
   {
     id: "1",
     title: "Buzo Hoodie Capuchino Unicesmag",
@@ -91,7 +91,7 @@ const TEMU_PRODUCTS: Product[] = [
   },
   {
     id: "6",
-    title: "Mochila Ergonomica Unicesmag Pro",
+    title: "Mochila Ergonómica Unicesmag Pro",
     category: "Accesorios",
     price: 84000,
     originalPrice: 120000,
@@ -147,11 +147,11 @@ export default function CartCatalog() {
   const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
   const totalCartPrice = Object.entries(cart).reduce((sum, [pId, qty]) => {
-    const prod = TEMU_PRODUCTS.find((p) => p.id === pId);
+    const prod = INSTITUTIONAL_PRODUCTS.find((p) => p.id === pId);
     return sum + (prod ? prod.price * qty : 0);
   }, 0);
 
-  const filteredProducts = TEMU_PRODUCTS.filter((prod) => {
+  const filteredProducts = INSTITUTIONAL_PRODUCTS.filter((prod) => {
     const matchesCategory =
       selectedCategory === "Todo" || prod.category === selectedCategory;
     const matchesSearch = prod.title
@@ -162,9 +162,9 @@ export default function CartCatalog() {
 
   const handleCheckout = () => {
     Alert.alert(
-      "🛒 Módulo de Prueba Temu-Style",
-      `¡Simulación de compra completada!\n\nArtículos: ${totalCartItems}\nTotal: $${totalCartPrice.toLocaleString("es-CO")}\n\nPróximamente podrás realizar pedidos reales y recibirlos en el campus.`,
-      [{ text: "¡Genial!", style: "default" }]
+      "🛒 Catálogo Institucional BienestAU",
+      `¡Simulación de compra completada!\n\nArtículos: ${totalCartItems}\nTotal: $${totalCartPrice.toLocaleString("es-CO")}\n\nPróximamente podrás realizar tus compras institucionales y reclamarlas directamente en el campus.`,
+      [{ text: "Entendido", style: "default" }]
     );
   };
 
@@ -180,42 +180,42 @@ export default function CartCatalog() {
           { paddingBottom: Math.max(80, insets.bottom + 70) },
         ]}
       >
-        {/* 1. HERO BANNER ESTILO TEMU FLASH SALE */}
+        {/* 1. HERO BANNER CON COLORES INSTITUCIONALES (AZUL Y ROJO CESMAG) */}
         <LinearGradient
-          colors={["#FF5000", "#FF8A00"]}
+          colors={[Colors.primary, Colors.primary_dark]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroBanner}
         >
           <View style={styles.heroHeaderRow}>
             <View style={styles.flashBadge}>
-              <MaterialCommunityIcons name="lightning-bolt" size={16} color="#FF5000" />
-              <Text style={styles.flashBadgeText}>OFERTAS RELÁMPAGO 24H</Text>
+              <MaterialCommunityIcons name="lightning-bolt" size={16} color={Colors.secondary} />
+              <Text style={styles.flashBadgeText}>OFERTAS BIENESTAU</Text>
             </View>
             <Text style={styles.timerText}>⏱️ 04:32:15</Text>
           </View>
 
-          <Text style={styles.heroTitle}>🔥 MEGA DESCUENTOS CAMPUS</Text>
+          <Text style={styles.heroTitle}>🔥 CATÁLOGO INSTITUCIONAL</Text>
           <Text style={styles.heroSubtitle}>
-            Hasta 50% OFF en productos institucionales, ropa y tiquetes a eventos
+            Indumentaria oficial, accesorios y tiquetes a eventos con descuentos exclusivos
           </Text>
 
           <View style={styles.perksRow}>
             <View style={styles.perkChip}>
-              <Text style={styles.perkText}>🚚 Envío Gratis Campus</Text>
+              <Text style={styles.perkText}>🚚 Retiro Gratis Campus</Text>
             </View>
             <View style={styles.perkChip}>
-              <Text style={styles.perkText}>💯 100% Original</Text>
+              <Text style={styles.perkText}>💯 100% Oficial Unicesmag</Text>
             </View>
             <View style={styles.perkChip}>
-              <Text style={styles.perkText}>🛡️ Garantía Unicesmag</Text>
+              <Text style={styles.perkText}>🛡️ Garantía Institucional</Text>
             </View>
           </View>
         </LinearGradient>
 
-        {/* 2. BUSCADOR TEMU */}
+        {/* 2. BUSCADOR INSTITUCIONAL */}
         <View style={styles.searchBox}>
-          <MaterialCommunityIcons name="magnify" size={22} color="#FF5000" />
+          <MaterialCommunityIcons name="magnify" size={22} color={Colors.primary} />
           <TextInput
             placeholder="Buscar buzos, termos, gorras, tiquetes..."
             placeholderTextColor="#94A3B8"
@@ -230,7 +230,7 @@ export default function CartCatalog() {
           ) : null}
         </View>
 
-        {/* 3. FILTROS CHIPS */}
+        {/* 3. FILTROS CHIPS CON COLORES INSTITUCIONALES */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -257,7 +257,7 @@ export default function CartCatalog() {
           ))}
         </ScrollView>
 
-        {/* 4. Malla 2-Columnas de Productos Temu */}
+        {/* 4. Malla 2-Columnas de Productos Institucionales */}
         <View style={styles.productGrid}>
           {filteredProducts.map((prod) => {
             const inCartQty = cart[prod.id] || 0;
@@ -270,7 +270,7 @@ export default function CartCatalog() {
                     <MaterialCommunityIcons
                       name={prod.icon}
                       size={44}
-                      color="#FF5000"
+                      color={Colors.primary}
                     />
                   </View>
 
@@ -307,7 +307,7 @@ export default function CartCatalog() {
                   </View>
 
                   <View style={styles.freeShippingRow}>
-                    <Text style={styles.freeShippingText}>🚚 Envío Gratis</Text>
+                    <Text style={styles.freeShippingText}>🚚 Retiro Gratis Campus</Text>
                   </View>
 
                   {/* Botón Agregar */}
@@ -331,12 +331,12 @@ export default function CartCatalog() {
         </View>
       </View>
 
-      {/* 5. BARRA FLOTANTE INFERIOR ESTILO TEMU */}
+      {/* 5. BARRA FLOTANTE INFERIOR CON COLORES INSTITUCIONALES */}
       {totalCartItems > 0 && (
         <View style={[styles.floatingCartBar, { bottom: Math.max(10, insets.bottom + 5) }]}>
           <View style={styles.floatingCartLeft}>
             <View style={styles.floatingCartIconBox}>
-              <MaterialCommunityIcons name="cart" size={24} color="#FF5000" />
+              <MaterialCommunityIcons name="cart" size={24} color={Colors.primary} />
               <View style={styles.floatingBadge}>
                 <Text style={styles.floatingBadgeText}>{totalCartItems}</Text>
               </View>
@@ -361,7 +361,7 @@ export default function CartCatalog() {
         </View>
       )}
 
-      {/* MODAL DE RESUMEN DEL CARRITO TEMU */}
+      {/* MODAL DE RESUMEN DEL CARRITO */}
       <Modal
         visible={isCartModalVisible}
         animationType="slide"
@@ -372,9 +372,9 @@ export default function CartCatalog() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <MaterialCommunityIcons name="cart" size={22} color="#FF5000" />
-                <Text type="defaultBold" style={{ fontSize: 18, color: "#0F172A" }}>
-                  Tu Carrito Temu-Style ({totalCartItems})
+                <MaterialCommunityIcons name="cart" size={22} color={Colors.primary} />
+                <Text type="defaultBold" style={{ fontSize: 18, color: Colors.primary }}>
+                  Tu Carrito BienestAU ({totalCartItems})
                 </Text>
               </View>
               <Pressable onPress={() => setIsCartModalVisible(false)}>
@@ -384,7 +384,7 @@ export default function CartCatalog() {
 
             <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={true}>
               {Object.entries(cart).map(([pId, qty]) => {
-                const prod = TEMU_PRODUCTS.find((p) => p.id === pId);
+                const prod = INSTITUTIONAL_PRODUCTS.find((p) => p.id === pId);
                 if (!prod) return null;
 
                 return (
@@ -393,14 +393,14 @@ export default function CartCatalog() {
                       <MaterialCommunityIcons
                         name={prod.icon}
                         size={22}
-                        color="#FF5000"
+                        color={Colors.primary}
                       />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: "800", fontSize: 13, color: "#0F172A" }}>
+                      <Text style={{ fontWeight: "800", fontSize: 13, color: Colors.primary }}>
                         {prod.title}
                       </Text>
-                      <Text style={{ fontSize: 12, color: "#FF5000", fontWeight: "800" }}>
+                      <Text style={{ fontSize: 12, color: Colors.secondary, fontWeight: "800" }}>
                         ${(prod.price * qty).toLocaleString("es-CO")}
                       </Text>
                     </View>
@@ -428,14 +428,14 @@ export default function CartCatalog() {
             <View style={styles.modalSummaryFooter}>
               <View style={styles.modalTotalRow}>
                 <Text style={{ fontSize: 14, color: "#64748B" }}>Total Estimado:</Text>
-                <Text style={{ fontSize: 20, fontWeight: "900", color: "#FF5000" }}>
+                <Text style={{ fontSize: 20, fontWeight: "900", color: Colors.secondary }}>
                   ${totalCartPrice.toLocaleString("es-CO")}
                 </Text>
               </View>
 
               <Pressable onPress={handleCheckout} style={styles.modalCheckoutBtn}>
                 <Text style={styles.modalCheckoutBtnText}>
-                  COMPRAR AHORA CON GARANTÍA
+                  FINALIZAR COMPRA
                 </Text>
               </Pressable>
             </View>
@@ -454,9 +454,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
-    shadowColor: "#FF5000",
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 6,
   },
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   flashBadgeText: {
-    color: "#FF5000",
+    color: Colors.secondary,
     fontSize: 10,
     fontWeight: "900",
   },
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "800",
-    backgroundColor: "rgba(0,0,0,0.25)",
+    backgroundColor: "rgba(0,0,0,0.3)",
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -526,11 +526,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "#FFD0B3",
+    borderColor: Colors.primary,
     marginBottom: 14,
     gap: 8,
     elevation: 2,
-    shadowColor: "#FF5000",
+    shadowColor: Colors.primary,
     shadowOpacity: 0.08,
     shadowRadius: 6,
   },
@@ -553,8 +553,8 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
   },
   categoryChipActive: {
-    backgroundColor: "#FF5000",
-    borderColor: "#FF5000",
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   categoryText: {
     fontSize: 12,
@@ -576,14 +576,14 @@ const styles = StyleSheet.create({
   },
   productImageContainer: {
     height: 130,
-    backgroundColor: "#FFF5F0",
+    backgroundColor: "#EFF6FF",
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#FFE4D6",
+    borderColor: "#DBEAFE",
   },
   productIconCircle: {
     width: 60,
@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 8,
     left: 8,
-    backgroundColor: "#FF5000",
+    backgroundColor: Colors.secondary,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -612,7 +612,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 8,
     left: 8,
-    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    backgroundColor: Colors.primary,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
   productTitle: {
     fontSize: 13,
     fontWeight: "800",
-    color: "#0F172A",
+    color: Colors.primary,
     lineHeight: 17,
     height: 34,
   },
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 15,
     fontWeight: "900",
-    color: "#FF5000",
+    color: Colors.secondary,
   },
   originalPriceText: {
     fontSize: 11,
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FF5000",
+    backgroundColor: Colors.primary,
     paddingVertical: 8,
     borderRadius: 10,
     gap: 6,
@@ -697,14 +697,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 14,
     right: 14,
-    backgroundColor: "#0F172A",
+    backgroundColor: Colors.primary_dark,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -4,
     right: -4,
-    backgroundColor: "#FF5000",
+    backgroundColor: Colors.secondary,
     width: 18,
     height: 18,
     borderRadius: 9,
@@ -752,7 +752,7 @@ const styles = StyleSheet.create({
   floatingCheckoutBtn: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FF5000",
+    backgroundColor: Colors.secondary,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 12,
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "#FFF5F0",
+    backgroundColor: "#EFF6FF",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -831,7 +831,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalCheckoutBtn: {
-    backgroundColor: "#FF5000",
+    backgroundColor: Colors.secondary,
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: "center",
