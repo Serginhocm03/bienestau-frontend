@@ -273,15 +273,15 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   featuredGridItem: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     width: "100%",
   },
   gridItem: {
     width: "50%",
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
   },
   gridItemContent: {
     width: '100%',
