@@ -10,6 +10,8 @@ import { AuthProvider } from "@/context/auth/AuthContext";
 import axios from "axios";
 import { buildUrl } from "@/lib/bienestar/api";
 
+import { Platform } from "react-native";
+
 // Configuración global para que las notificaciones muestren banner arriba aunque la app esté abierta
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -20,6 +22,18 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+// Configurar canal de máxima importancia en Android al arrancar la app
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'Alertas BienestAU',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#004A8B',
+    showBadge: true,
+    sound: 'default',
+  });
+}
 
 // Previene congelamientos y choques de cabeceras nativas al montar sub-navegadores
 enableScreens(false);
