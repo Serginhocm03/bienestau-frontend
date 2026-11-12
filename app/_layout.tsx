@@ -12,6 +12,24 @@ import { buildUrl } from "@/lib/bienestar/api";
 
 import { Platform } from "react-native";
 
+import * as TaskManager from 'expo-task-manager';
+
+const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND_NOTIFICATION_TASK';
+
+TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => {
+  if (error) {
+    console.error('❌ Error en tarea de segundo plano:', error);
+    return;
+  }
+  if (data) {
+    console.log('🔔 Notificación recibida con app en segundo plano o cerrada:', data);
+  }
+});
+
+try {
+  Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK).catch(() => {});
+} catch (_) {}
+
 // Configuración global para que las notificaciones muestren banner arriba aunque la app esté abierta
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
