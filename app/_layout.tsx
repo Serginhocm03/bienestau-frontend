@@ -52,22 +52,58 @@ const queryClient = new QueryClient({
 
 import { MaterialCommunityIcons, MaterialIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
 
+import { useRef } from "react";
+
 function RootServices() {
   const router = useRouter();
+  const lastNotifiedIdRef = useRef<string | number | null>(null);
 
-  // KEEP-ALIVE: Evita que Render se duerma
+  // KEEP-ALIVE y Monitor de Avisos en tiempo real
   useEffect(() => {
-    const pingServer = async () => {
+    const checkNewReminders = async () => {
       try {
+        // Ping servidor
         await axios.get(buildUrl('home', false));
-        console.log('📡 Server Ping: Success (Keep-alive)');
+
+        // Consultar avisos recientes
+        const remindersUrl = buildUrl('reminders', false) + '?sort=createdAt:desc&pagination[limit]=1';
+        const res = await axios.get(remindersUrl);
+        const latestReminder = res.data?.data?.[0];
+
+        if (latestReminder) {
+          const currentId = latestReminder.documentId || latestReminder.id;
+
+          if (lastNotifiedIdRef.current === null) {
+            // Primera carga: registrar el ID actual sin notificar
+            lastNotifiedIdRef.current = currentId;
+          } else if (lastNotifiedIdRef.current !== currentId) {
+            // Se detectó una nueva noticia o evento publicado
+            console.log('✨ [NUEVO AVISO DETECTADO]:', latestReminder.title);
+            lastNotifiedIdRef.current = currentId;
+
+            // Disparar notificación nativa en la barra superior del celular de inmediato
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: latestReminder.title || 'BienestAU 🔔',
+                body: latestReminder.description || 'Nuevo aviso publicado en BienestAU',
+                sound: 'default',
+                priority: Notifications.AndroidNotificationPriority.MAX,
+                data: {
+                  contentType: latestReminder.contentType,
+                  contentId: latestReminder.contentId,
+                },
+              },
+              trigger: null,
+            });
+          }
+        }
       } catch (e) {
-        console.log('📡 Server Ping: Awake');
+        console.log('📡 Keep-alive / Monitor Sync');
       }
     };
 
-    pingServer();
-    const interval = setInterval(pingServer, 1000 * 60 * 10);
+    checkNewReminders();
+    const interval = setInterval(checkNewReminders, 12000); // Revisa cada 12 segundos
     return () => clearInterval(interval);
   }, []);
 
