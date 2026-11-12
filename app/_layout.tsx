@@ -88,6 +88,8 @@ function RootServices() {
                 body: latestReminder.description || 'Nuevo aviso publicado en BienestAU',
                 sound: 'default',
                 priority: Notifications.AndroidNotificationPriority.MAX,
+                color: '#004A8B',
+                badge: 1,
                 data: {
                   contentType: latestReminder.contentType,
                   contentId: latestReminder.contentId,
