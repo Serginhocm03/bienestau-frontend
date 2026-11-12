@@ -243,7 +243,7 @@ export default function Home() {
           )}
 
           {/* DYNAMIC SECTIONS */}
-          <DynamicSections content={home.content} />
+          {activeTab !== "noticias" && <DynamicSections content={home.content} />}
         </View>
       )}
 
