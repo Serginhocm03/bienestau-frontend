@@ -180,7 +180,14 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
           console.log('💾 Guardando token y datos de usuario en SecureStore...');
           await SecureStore.setItemAsync(env.TOKEN_KEY, auth.token);
           if (auth.user) {
-            await SecureStore.setItemAsync("bienestau_user_data", JSON.stringify(auth.user));
+            const compactUser = {
+              id: auth.user.id,
+              documentId: auth.user.documentId,
+              username: auth.user.username,
+              email: auth.user.email,
+              type: auth.user.type,
+            };
+            await SecureStore.setItemAsync("bienestau_user_data", JSON.stringify(compactUser));
           }
           console.log('✅ Sesión guardada persistentemente');
         }
