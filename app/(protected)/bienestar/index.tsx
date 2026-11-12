@@ -216,9 +216,6 @@ export default function Home() {
                   </View>
                 )}
               </View>
-
-              {/* REELS Y MOMENTOS CAMPUS */}
-              <ReelsSection />
             </>
           ) : activeTab === "eventos" ? (
             <View style={styles.section}>
