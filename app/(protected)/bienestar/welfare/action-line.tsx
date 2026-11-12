@@ -44,48 +44,22 @@ export default function ActionLine() {
     >
       <View style={{ paddingTop: 0 }}>
         <View style={{
-          padding: 16,
+          padding: 20,
           backgroundColor: '#FFFFFF',
           borderBottomWidth: 1,
           borderBottomColor: '#F1F5F9'
         }}>
-          <Text color="primary" type="subtitle" style={{ marginBottom: 12, fontSize: 24 }}>
+          <Text color="primary" type="subtitle" style={{ marginBottom: 10, fontSize: 24, fontWeight: '800' }}>
             {actionLine?.header?.title}
           </Text>
 
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <View style={{ flex: 1 }}>
-              <Text color="black" style={{ fontSize: 16, lineHeight: 22, fontWeight: '400' }}>
-                Bienvenido a esta sección. Aquí podrás conocer todos los servicios, objetivos y el impacto que tenemos en la comunidad universitaria para tu desarrollo integral.
-              </Text>
-            </View>
-
-            {actionLine?.header?.image && (
-              <View style={{
-                width: 130,
-                padding: 4,
-                borderRadius: 4,
-                borderWidth: 1,
-                borderColor: '#CCCCCC',
-                backgroundColor: '#F8F9FA',
-                alignSelf: 'flex-start'
-              }}>
-                <Image
-                  source={{ uri: buildMediaUrl(actionLine.header.image.url) }}
-                  style={{ width: '100%', height: 140, borderRadius: 2 }}
-                  contentFit="cover"
-                  transition={200}
-                />
-                <Text style={{ fontSize: 9, marginTop: 4, color: '#666', textAlign: 'center', fontWeight: 'bold' }}>
-                  Ficha informativa
-                </Text>
-              </View>
-            )}
-          </View>
+          <Text color="black" style={{ fontSize: 15, lineHeight: 22, color: '#334155' }}>
+            Bienvenido a esta sección. Aquí podrás conocer todos los servicios, objetivos y el impacto que tenemos en la comunidad universitaria para tu desarrollo integral.
+          </Text>
         </View>
       </View>
 
-      <View style={{ marginTop: 50 }}>
+      <View style={{ marginTop: 24 }}>
         {actionLine?.content ? (
           <DynamicSections content={actionLine.content} />
         ) : (
@@ -96,7 +70,7 @@ export default function ActionLine() {
       </View>
 
       {programs.length > 0 && (
-        <View style={{ gap: 12, marginTop: 8, paddingBottom: 20 }}>
+        <View style={{ gap: 12, marginTop: 16, paddingBottom: 20 }}>
           <Text
             color="primary"
             type="subtitle"
@@ -136,22 +110,68 @@ export default function ActionLine() {
         </View>
       )}
 
-      <ContactSection
-        style={{ margin: 16, marginTop: 8 }}
-        BeforeComponent={() => (
-          <View>
+      {/* INFORMACIÓN GENERAL Y FICHA INFORMATIVA EN LA PARTE INFERIOR */}
+      <View style={{
+        margin: 16,
+        marginTop: 16,
+        marginBottom: 32,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+        elevation: 4,
+      }}>
+        <Text color="primary" type="subtitle" style={{ fontSize: 18, marginBottom: 16, fontWeight: '800' }}>
+          Información General
+        </Text>
+
+        <View style={{ flexDirection: 'row', gap: 16, alignItems: 'flex-start' }}>
+          <View style={{ flex: 1, gap: 12 }}>
             {(actionLine?.directors ?? []).map((director, index) => (
-              <View key={index}>
-                <Text>{director.name}</Text>
-                <Text color="primary" style={{ fontSize: 12 }}>
+              <View key={index} style={{ marginBottom: 4 }}>
+                <Text type="defaultBold" style={{ fontSize: 16, color: '#0F172A' }}>{director.name}</Text>
+                <Text color="primary" style={{ fontSize: 13, marginTop: 2, fontWeight: '600' }}>
                   {director.role}
                 </Text>
               </View>
             ))}
+
+            {actionLine?.contact && (
+              <ContactSection
+                style={{ marginTop: 4, padding: 0, borderWidth: 0 }}
+                {...actionLine.contact}
+              />
+            )}
           </View>
-        )}
-        {...actionLine.contact}
-      />
+
+          {actionLine?.header?.image && (
+            <View style={{
+              width: 125,
+              padding: 6,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#E2E8F0',
+              backgroundColor: '#F8FAFC',
+              alignItems: 'center',
+            }}>
+              <Image
+                source={{ uri: buildMediaUrl(actionLine.header.image.url) }}
+                style={{ width: '100%', height: 135, borderRadius: 8 }}
+                contentFit="cover"
+                transition={200}
+              />
+              <Text style={{ fontSize: 10, marginTop: 6, color: '#64748B', textAlign: 'center', fontWeight: 'bold' }}>
+                Ficha informativa
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
     </ScrollViewLayout>
   );
 }
