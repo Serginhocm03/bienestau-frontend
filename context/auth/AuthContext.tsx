@@ -220,18 +220,18 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   }, [auth.authenticated, isLoading, segments]);
 
   // EFECTO 4: Registrar token de notificaciones después del login
-useEffect(() => {
-  if (!auth.authenticated) return;
+  useEffect(() => {
+    if (!auth.authenticated || !auth.token) return;
 
-  (async () => {
-    console.log('🔔 Registrando token de notificaciones...');
-    const token = await registerForPushNotificationsAsync();
-    
-    if (token) {
-      await registerTokenWithBackend(token);
-    }
-  })();
-}, [auth.authenticated]);
+    (async () => {
+      console.log('🔔 Registrando token de notificaciones...');
+      const token = await registerForPushNotificationsAsync();
+
+      if (token) {
+        await registerTokenWithBackend(token, auth.token);
+      }
+    })();
+  }, [auth.authenticated, auth.token]);
 
 const value = {
   auth,

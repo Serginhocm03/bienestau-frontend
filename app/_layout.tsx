@@ -10,6 +10,17 @@ import { AuthProvider } from "@/context/auth/AuthContext";
 import axios from "axios";
 import { buildUrl } from "@/lib/bienestar/api";
 
+// Configuración global para que las notificaciones muestren banner arriba aunque la app esté abierta
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 // Previene congelamientos y choques de cabeceras nativas al montar sub-navegadores
 enableScreens(false);
 SplashScreen.preventAutoHideAsync();

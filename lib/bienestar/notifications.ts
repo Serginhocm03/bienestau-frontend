@@ -19,8 +19,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   let token: string | null = null;
 
   if (!Device.isDevice) {
-    console.log('⚠️ No es un dispositivo físico');
-    return null;
+    console.log('ℹ️ Entorno no físico o emulador. Intentando obtener token Expo...');
   }
 
   if (Platform.OS === 'android') {
@@ -30,6 +29,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#004A8B',
       showBadge: true,
+      sound: 'default',
     });
   }
 
@@ -42,37 +42,41 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
   }
   
   if (finalStatus !== 'granted') {
-    console.log('⚠️ Permisos denegados');
+    console.log('⚠️ Permisos de notificación denegados por el usuario');
     return null;
   }
 
   try {
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    
-    if (!projectId) {
-      console.error('❌ No se encontró projectId en la configuración');
-      return null;
-    }
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId || (Constants as any).easConfig?.projectId || '90306ef0-6145-40fb-bc9f-774a6b180bd6';
 
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
+    let tokenData;
+    try {
+      tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    } catch (errProject) {
+      console.log('⚠️ Reintentando obtener Expo Push Token sin projectId explícito...', errProject);
+      tokenData = await Notifications.getExpoPushTokenAsync();
+    }
     
-    token = tokenData.data;
-    console.log('🔔 Token obtenido:', token);
+    token = tokenData?.data || null;
+    console.log('🔔 Token de notificaciones obtenido exitosamente:', token);
   } catch (error) {
-    console.error('❌ Error obteniendo token:', error);
+    console.error('❌ Error fatal obteniendo token de notificaciones:', error);
     return null;
   }
 
   return token;
 }
 
-export async function registerTokenWithBackend(token: string): Promise<void> {
+export async function registerTokenWithBackend(token: string, authToken?: string): Promise<void> {
   try {
     const url = buildUrl('notification-tokens', false);
 
     console.log('🔄 Registrando/Actualizando token en el servidor...');
+
+    const headers: Record<string, string> = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
 
     // Ahora el backend maneja toda la lógica de "Upsert" (crear o actualizar)
     // Simplemente enviamos el token y la plataforma.
@@ -82,11 +86,11 @@ export async function registerTokenWithBackend(token: string): Promise<void> {
         platform: Platform.OS,
         active: true
       },
-    });
+    }, { headers });
 
     console.log('✅ Dispositivo registrado correctamente como ACTIVO');
-  } catch (error) {
-    console.error('❌ Error enviando token al backend:', error);
+  } catch (error: any) {
+    console.error('❌ Error enviando token al backend:', error?.response?.data || error?.message);
   }
 }
 
